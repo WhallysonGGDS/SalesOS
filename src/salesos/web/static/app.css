@@ -1,0 +1,96 @@
+/* SalesOS — casca visual. Uma paleta curta: noite, superfície, linha, texto, cinza e um azul gelo
+   reservado ao que está ativo (status e foco). Fontes do sistema: nada carregado de fora. */
+:root {
+  --noite: #0a1120;
+  --superficie: #101a2e;
+  --linha: #1c2940;
+  --texto: #e9edf4;
+  --cinza: #8b96aa;
+  --gelo: #8ab8ff;
+  --fonte: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", system-ui,
+    -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--noite); color: var(--texto); font-family: var(--fonte); }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -3rem;
+  padding: .5rem .75rem;
+  background: var(--superficie);
+  color: var(--texto);
+  border-radius: .375rem;
+}
+.skip:focus { top: .75rem; }
+
+:focus-visible { outline: 2px solid var(--gelo); outline-offset: 3px; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem var(--gutter);
+  font-size: .875rem;
+  color: var(--cinza);
+}
+.brand { color: var(--texto); font-weight: 600; letter-spacing: .02em; }
+.status { display: inline-flex; align-items: center; gap: .5rem; }
+.status-dot {
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: var(--gelo);
+  box-shadow: 0 0 .75rem var(--gelo);
+}
+
+.page {
+  display: grid;
+  align-content: end;
+  gap: clamp(3rem, 8vh, 6rem);
+  padding: 0 var(--gutter) clamp(2.5rem, 8vh, 5rem);
+}
+
+.wordmark {
+  margin: 0;
+  font-size: clamp(4rem, 15vw, 13rem);
+  font-weight: 600;
+  line-height: .9;
+  letter-spacing: -.045em;
+  animation: surge 900ms cubic-bezier(.2, .7, .1, 1) both;
+}
+.lead {
+  max-width: 34rem;
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+  color: var(--cinza);
+}
+
+.facts { max-width: 56rem; }
+.facts-title { margin: 0 0 1rem; font-size: .875rem; font-weight: 600; color: var(--texto); }
+.facts dl { margin: 0; display: grid; gap: .75rem 2.5rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.facts dt { font-size: .8125rem; color: var(--cinza); }
+.facts dd { margin: .125rem 0 0; }
+
+@keyframes surge {
+  from { opacity: 0; transform: translateY(.25em); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark { animation: none; }
+}

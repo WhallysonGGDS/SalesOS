@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" aria-labelledby="titulo">
+  <h1 id="titulo" class="wordmark">SalesOS</h1>
+  <p class="lead">A fundação está no ar. Clientes, funil, tarefas e propostas chegam nas próximas fases.</p>
+</section>
+<section class="facts" aria-labelledby="sistema">
+  <h2 id="sistema" class="facts-title">Sistema</h2>
+  <dl>
+    <div><dt>Versão</dt><dd>{{ app_version }}</dd></div>
+    <div><dt>Endereço</dt><dd>{{ address }}</dd></div>
+    <div><dt>Banco de dados</dt><dd>SQLite em modo WAL, com chaves estrangeiras ativas</dd></div>
+    <div><dt>Proteções</dt><dd>Acesso só por endereço local, cabeçalhos de segurança e token em todo formulário</dd></div>
+    <div><dt>Python</dt><dd>{{ python_version }}</dd></div>
+  </dl>
+</section>
+{% endblock %}

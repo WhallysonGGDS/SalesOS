@@ -1,0 +1,78 @@
+"""Proteções HTTP da aplicação local: cabeçalhos de segurança e CSRF (double-submit assinado).
+
+O cookie guarda um token aleatório (HttpOnly). Formulários e requisições enviam a assinatura
+HMAC desse token com o segredo da aplicação, no campo `csrf_token` ou no header `X-CSRF-Token`.
+"""
+
+import hashlib
+import hmac
+import secrets
+from collections.abc import Awaitable, Callable
+
+from fastapi import HTTPException, Request, Response
+
+CSRF_COOKIE = "salesos_csrf"
+CSRF_FIELD = "csrf_token"
+CSRF_HEADER = "X-CSRF-Token"
+UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; base-uri 'none'; object-src 'none'; "
+        "frame-ancestors 'none'; form-action 'self'"
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Cross-Origin-Opener-Policy": "same-origin",
+}
+
+
+def sign_token(secret: str, token: str) -> str:
+    return hmac.new(secret.encode(), token.encode(), hashlib.sha256).hexdigest()
+
+
+def _secret(request: Request) -> str:
+    secret: str = request.app.state.settings.secret_key.get_secret_value()
+    return secret
+
+
+def form_token(request: Request) -> str:
+    """Token para o campo oculto `csrf_token` dos formulários (global dos templates)."""
+    return sign_token(_secret(request), request.state.csrf_token)
+
+
+async def security_middleware(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    token = request.cookies.get(CSRF_COOKIE)
+    issue_cookie = token is None
+    request.state.csrf_token = token or secrets.token_urlsafe(32)
+    response = await call_next(request)
+    response.headers.update(SECURITY_HEADERS)
+    if issue_cookie:
+        response.set_cookie(
+            CSRF_COOKIE, request.state.csrf_token, httponly=True, samesite="strict", path="/"
+        )
+    return response
+
+
+async def require_csrf(request: Request) -> None:
+    """Dependência global: métodos que alteram estado exigem token CSRF válido."""
+    if request.method not in UNSAFE_METHODS:
+        return
+    cookie = request.cookies.get(CSRF_COOKIE)
+    submitted: object = request.headers.get(CSRF_HEADER)
+    if submitted is None and request.headers.get("content-type", "").startswith(
+        ("application/x-www-form-urlencoded", "multipart/form-data")
+    ):
+        submitted = (await request.form()).get(CSRF_FIELD)
+    if not (
+        cookie
+        and isinstance(submitted, str)
+        and hmac.compare_digest(submitted, sign_token(_secret(request), cookie))
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Formulário expirado ou inválido. Recarregue a página e envie de novo.",
+        )

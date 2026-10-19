@@ -6,15 +6,17 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
 
 ## Estado atual
 
-- **Implementado:** nada do produto. Só a integração do Toolkit (`docs/toolkit/`).
-- **Próxima etapa:** Fase 01, a fundação técnica, que só começa com aprovação explícita do usuário.
-- **Stack planejada (não instalada):** Python 3.15 (se as dependências forem compatíveis; senão, a versão estável compatível mais recente), FastAPI, SQLAlchemy 2.x, Alembic, SQLite, Pydantic Settings, Jinja2, pytest + HTTPX, Ruff, mypy e uv.
+- **Implementado:** fundação técnica (Fase 01). Ainda não há nenhuma funcionalidade de CRM. Detalhes em `docs/architecture.md` e `docs/phases.md`.
+- **Próxima etapa:** Fase 02 (clientes e histórico), que só começa com aprovação explícita do usuário.
+- **Stack:** Python 3.15.0, uv, FastAPI, SQLAlchemy 2.1, Alembic, SQLite, Pydantic Settings, Jinja2, pytest + HTTPX, Ruff e mypy (ADR `docs/decisions/0001-stack-e-python.md`).
 
 ## Comandos canônicos
 
-Ainda não existem: são definidos na Fase 01. Não invente scripts. Quando existirem:
+Execute a partir da raiz do projeto. Não invente scripts.
 
-- Instalar: `uv sync`
+- Instalar: `uv sync --locked`
+- Rodar: `uv run alembic upgrade head` e depois `uv run salesos` (http://127.0.0.1:8000)
+- Nova migração: `uv run alembic revision --autogenerate -m "<descrição>"`; revisar o arquivo antes de aplicar
 - Lint e formatação: `uv run ruff check .` e `uv run ruff format --check .`
 - Tipos: `uv run mypy`
 - Testes: `uv run pytest`

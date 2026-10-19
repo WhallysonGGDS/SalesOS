@@ -1,0 +1,52 @@
+[project]
+name = "salesos"
+version = "0.1.0"
+description = "WE TECH SalesOS — CRM comercial local"
+readme = "README.md"
+requires-python = ">=3.15"
+license = "LicenseRef-Proprietary"
+dependencies = [
+    "alembic",
+    "fastapi",
+    "jinja2",
+    "pydantic-settings",
+    "python-multipart",
+    "sqlalchemy",
+    "uvicorn",
+]
+
+[project.scripts]
+salesos = "salesos.main:run"
+
+[dependency-groups]
+dev = [
+    "httpx",
+    "mypy",
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py315"
+# A cópia do Toolkit é preservada byte a byte (manifesto SHA-256): nunca reformatar.
+extend-exclude = ["tooling"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+strict = true
+python_version = "3.15"
+files = ["src", "tests", "migrations"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"

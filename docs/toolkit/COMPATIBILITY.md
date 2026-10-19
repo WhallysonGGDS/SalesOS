@@ -6,18 +6,18 @@ O Toolkit (revisão `790a895`) foi escrito para **Next.js + TypeScript + Drizzle
 
 | Convenção do Toolkit | Intenção | Equivalente no SalesOS | Situação |
 |---|---|---|---|
-| Next.js / App Router | Servidor web e UI | FastAPI + Jinja2 (renderização no servidor) | Planejado (Fase 01) |
-| Drizzle ORM + PostgreSQL | Persistência tipada e migrações versionadas | SQLAlchemy 2.x (`Mapped`) + Alembic + SQLite. PostgreSQL só numa migração futura. | Planejado |
-| `db:generate` revisado antes de aplicar | Nunca migrar às cegas | `alembic revision --autogenerate` → revisar → `alembic upgrade head` só em banco autorizado. `alembic check` nos testes. | Planejado |
-| Zod (env, entradas, respostas) | Validação em tempo de execução | Pydantic v2 + `pydantic-settings` | Planejado |
+| Next.js / App Router | Servidor web e UI | FastAPI + Jinja2 (renderização no servidor) | Implementado (Fase 01) |
+| Drizzle ORM + PostgreSQL | Persistência tipada e migrações versionadas | SQLAlchemy 2.x (`Mapped`) + Alembic + SQLite. PostgreSQL só numa migração futura. | Implementado (Fase 01; sem tabelas ainda) |
+| `db:generate` revisado antes de aplicar | Nunca migrar às cegas | `alembic revision --autogenerate` → revisar → `alembic upgrade head` só em banco autorizado. `alembic check` nos testes. | Implementado (Fase 01) |
+| Zod (env, entradas, respostas) | Validação em tempo de execução | Pydantic v2 + `pydantic-settings` | Configuração implementada; validação de entradas a partir da Fase 02 |
 | Pino com redação | Logs estruturados sem segredos | `logging` da biblioteca padrão, com filtro de campos sensíveis | Planejado |
-| `server-only`, nada em `NEXT_PUBLIC_*` | Segredos fora do cliente | Segredos só em `.env` (ignorado no Git); templates nunca recebem configuração sensível | Planejado |
-| Vitest | Testes | pytest + HTTPX (`TestClient`), SQLite temporário por teste | Planejado |
-| ESLint / Biome + regras locais | Qualidade estática | Ruff (lint + formatação) + mypy `--strict` | Planejado |
+| `server-only`, nada em `NEXT_PUBLIC_*` | Segredos fora do cliente | Segredos só em `.env` (ignorado no Git); templates nunca recebem configuração sensível | Implementado (Fase 01) |
+| Vitest | Testes | pytest + HTTPX (`TestClient`), SQLite temporário por teste | Implementado (Fase 01) |
+| ESLint / Biome + regras locais | Qualidade estática | Ruff (lint + formatação) + mypy `--strict` | Implementado (Fase 01) |
 | Limite de 350 linhas por arquivo (regra ESLint) | Arquivos coesos | Convenção no `AGENTS.md`. Se for preciso, um teste pytest simples mede o tamanho dos arquivos de `src/`. | Convenção ativa |
-| Typed lint (`no-floating-promises`) | Correção assíncrona | mypy strict; Ruff com regras `ASYNC` se houver código assíncrono | Planejado |
-| `npm run verify` | Comando único de verificação | `ruff check` → `ruff format --check` → `mypy` → `pytest` | Planejado |
-| `docs/setup.md` (revisão e evidências) | Rastreabilidade | `docs/toolkit/*` agora; `docs/setup.md` na Fase 01 com link para cá | Ativo |
+| Typed lint (`no-floating-promises`) | Correção assíncrona | mypy strict; Ruff com regras `ASYNC` se houver código assíncrono | mypy strict ativo; regras `ASYNC` quando surgir código assíncrono relevante |
+| `npm run verify` | Comando único de verificação | `ruff check` → `ruff format --check` → `mypy` → `pytest` | Implementado (README, `docs/quality.md`) |
+| `docs/setup.md` (revisão e evidências) | Rastreabilidade | `docs/setup.md` (versões e evidências) + `docs/toolkit/*` | Ativo |
 | Skills Vercel / shadcn / next-dev-loop | Especialização em Next/React | Não aplicável. Para UI: skills de design disponíveis no cliente, escolhidas por fase. | Não aplicável |
 | Avaliação da harness (fixture em Node) | Testar o comportamento do agente | A fixture é em JS e roda com Node, de forma independente da stack do produto. Fica usável como está. | Ativo (USAGE §6) |
 
@@ -41,14 +41,11 @@ O Toolkit (revisão `790a895`) foi escrito para **Next.js + TypeScript + Drizzle
 
 ## 4. Python 3.15.0 como alvo
 
-Verificado em 2026-10-19, pelo PyPI:
+**Confirmado na Fase 01 (2026-10-19)** e registrado no ADR `docs/decisions/0001-stack-e-python.md`:
 
-- Há wheels `cp315-win_amd64` publicadas para as dependências binárias essenciais: `pydantic-core` 2.50.1, `SQLAlchemy` 2.1.5, `greenlet` 3.5.6 e `MarkupSafe` 3.0.4.
-- `pydantic-settings`, `uvicorn`, `fastapi`, `alembic`, `jinja2` e `httpx` são Python puro.
+- O lançamento final existe: tag `v3.15.0` no repositório `python/cpython`, e a PEP 790 traz "3.15.0 final: 2026-10-09".
+- No Cloud: `uv` atualizado para 0.13.1, `uv python install 3.15.0` → CPython 3.15.0 (com GIL, SQLite 3.53.1).
+- Todas as dependências resolvem e instalam no 3.15.0 (`uv.lock`). Ruff 0.17.1 (`target-version = "py315"`, sem aviso), mypy 2.4.0 (`python_version = "3.15"`) e os 46 testes passam.
+- Há wheels `cp315-win_amd64` para as dependências binárias (`pydantic-core`, `SQLAlchemy`, `MarkupSafe`, `mypy`).
 
-**Ainda não verificado:**
-
-- O lançamento final do 3.15.0. O `python.org` está bloqueado neste container, e o `uv` 0.11.32 local só lista a `3.15.0b4`. Confirme na sua máquina com `py -3.15 --version` ou `uv python list`.
-- O suporte do Ruff e do mypy a `target-version`/`python_version` 3.15. Isso fica para a Fase 01.
-
-Se algum desses itens falhar, a Fase 01 usará a versão estável compatível mais recente e registrará o motivo.
+**Ainda não verificado:** o mesmo resultado no Windows. Rode `uv sync --locked` e a verificação completa (README).
