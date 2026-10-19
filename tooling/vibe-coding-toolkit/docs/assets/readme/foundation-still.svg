@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="520" viewBox="0 0 1600 520" role="img" aria-labelledby="title description">
+  <title id="title">Build the foundation. Preserve what works.</title>
+  <desc id="description">Static version: Setup diagram with intent, foundation, integration, and evidence.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1">
+      <stop stop-color="#090c12" />
+      <stop offset="1" stop-color="#19150f" />
+    </linearGradient>
+    <linearGradient id="line">
+      <stop stop-color="#76502e" />
+      <stop offset=".55" stop-color="#f2c58b" />
+      <stop offset="1" stop-color="#b78951" />
+    </linearGradient>
+    <radialGradient id="halo">
+      <stop stop-color="#edb773" stop-opacity=".12" />
+      <stop offset="1" stop-color="#edb773" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0v32" fill="none" stroke="#d2ac78" stroke-opacity=".045" />
+    </pattern>
+    <clipPath id="frame">
+      <rect width="1600" height="520" rx="20" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1600" height="520" fill="url(#bg)" />
+    <rect width="1600" height="520" fill="url(#grid)" />
+    <ellipse cx="1260" cy="280" rx="490" ry="340" fill="url(#halo)" />
+    <g font-family="monospace" font-size="18" letter-spacing="3" fill="#e7ba7d">
+      <text x="76" y="66">01 / FOUNDATION</text>
+      <text x="1524" y="66" text-anchor="end" fill="#9da6b3">NEW · EXISTING · MODULAR</text>
+    </g>
+    <text x="76" y="150" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800" fill="#f5f2eb">Build the foundation. Preserve what works.</text>
+    <path d="M76 184h1448" stroke="#e7ba7d" stroke-opacity=".18" />
+    <path d="M210 304H1390" stroke="#e7ba7d" stroke-opacity=".13" stroke-width="2" />
+    <path d="M210 304H1390" stroke="url(#line)" stroke-width="3" fill="none" />
+    <g font-family="Arial, Helvetica, sans-serif">
+      <g>
+        <rect x="76" y="234" width="292" height="142" rx="12" fill="#10151c" stroke="#977145" />
+        <text x="100" y="271" fill="#e7ba7d" font-family="monospace" font-size="18">01 / INTENT</text>
+        <text x="100" y="316" fill="#f5f2eb" font-size="29" font-weight="700">Define product</text>
+        <text x="100" y="348" fill="#aeb7c2" font-size="20">Scope and constraints</text>
+      </g>
+      <g>
+        <rect x="462" y="234" width="292" height="142" rx="12" fill="#10151c" stroke="#977145" />
+        <text x="486" y="271" fill="#e7ba7d" font-family="monospace" font-size="18">02 / FOUNDATION</text>
+        <text x="486" y="316" fill="#f5f2eb" font-size="29" font-weight="700">Prepare the base</text>
+        <text x="486" y="348" fill="#aeb7c2" font-size="20">Actual stack and contracts</text>
+      </g>
+      <g>
+        <rect x="848" y="234" width="292" height="142" rx="12" fill="#10151c" stroke="#977145" />
+        <text x="872" y="271" fill="#e7ba7d" font-family="monospace" font-size="18">03 / INTEGRATION</text>
+        <text x="872" y="316" fill="#f5f2eb" font-size="29" font-weight="700">Link the parts</text>
+        <text x="872" y="348" fill="#aeb7c2" font-size="20">Skills, context, and rules</text>
+      </g>
+      <g>
+        <rect x="1234" y="234" width="290" height="142" rx="12" fill="#191a17" stroke="#edbf81" />
+        <text x="1258" y="271" fill="#e7ba7d" font-family="monospace" font-size="18">04 / EVIDENCE</text>
+        <text x="1258" y="316" fill="#f5f2eb" font-size="29" font-weight="700">Verify delivery</text>
+        <text x="1258" y="348" fill="#aeb7c2" font-size="20">Commands and results</text>
+      </g>
+    </g>
+    <g opacity=".5" fill="#f2c58b">
+      <circle cx="414" cy="304" r="5" />
+      <circle cx="800" cy="304" r="5" />
+      <circle cx="1186" cy="304" r="5" />
+    </g>
+    <text x="76" y="456" fill="#aeb7c2" font-family="monospace" font-size="19" letter-spacing="1">INSPECT / ADAPT / IMPLEMENT / VERIFY</text>
+    <path d="M1414 456h110m-18-10 18 10-18 10" fill="none" stroke="#e7ba7d" stroke-width="2" />
+  </g>
+</svg>

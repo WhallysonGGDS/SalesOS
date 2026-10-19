@@ -1,0 +1,4 @@
+# Cópia preservada do Vibe Coding Toolkit: bytes idênticos à origem, sem
+# conversão de fim de linha, para manter a verificação SHA-256 válida no Windows.
+tooling/vibe-coding-toolkit/** -text
+tooling/vibe-coding-toolkit.sha256 -text

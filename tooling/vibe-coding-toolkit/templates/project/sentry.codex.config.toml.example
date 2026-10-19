@@ -1,0 +1,4 @@
+# Optional: merge into .codex/config.toml after choosing Sentry.
+# Replace both example slugs; complete OAuth in the client, never in this file.
+[mcp_servers.sentry]
+url = "https://mcp.sentry.dev/mcp/example-org/example-project"

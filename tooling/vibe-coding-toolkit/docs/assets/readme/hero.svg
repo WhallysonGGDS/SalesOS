@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="680" viewBox="0 0 1600 680" role="img" aria-labelledby="title description">
+  <!-- Keep the static companion hero-still.svg aligned with this composition. -->
+  <title id="title">Vibe Coding Toolkit</title>
+  <desc id="description">Machine setup and individual project setup in charcoal and amber. An orbital portal lights up the toolkit name. The animation ends in under five seconds and respects reduced-motion preferences.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#080b10"/>
+      <stop offset=".55" stop-color="#0b1017"/>
+      <stop offset="1" stop-color="#17130e"/>
+    </linearGradient>
+    <radialGradient id="atmosphere">
+      <stop stop-color="#f2b66d" stop-opacity=".18"/>
+      <stop offset=".55" stop-color="#b7783c" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#b7783c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff0d5"/>
+      <stop offset=".22" stop-color="#b98950"/>
+      <stop offset=".48" stop-color="#27211a"/>
+      <stop offset=".72" stop-color="#76502e"/>
+      <stop offset="1" stop-color="#f4c58a"/>
+    </linearGradient>
+    <linearGradient id="beam">
+      <stop stop-color="#ecb976" stop-opacity="0"/>
+      <stop offset=".62" stop-color="#ecb976" stop-opacity=".12"/>
+      <stop offset=".88" stop-color="#f7d5a0" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#ecb976" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="sweep">
+      <stop stop-color="#f9d6a0" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#f9d6a0" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#f9d6a0" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grain" width="41" height="37" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="4" r=".6" fill="#fff" opacity=".05"/>
+      <circle cx="25" cy="21" r=".6" fill="#fff" opacity=".03"/>
+      <circle cx="13" cy="33" r=".5" fill="#fff" opacity=".04"/>
+    </pattern>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <clipPath id="frame"><rect width="1600" height="680" rx="20"/></clipPath>
+    <clipPath id="type">
+      <text x="76" y="337" font-family="Arial, Helvetica, sans-serif" font-size="114" font-weight="900" textLength="856" lengthAdjust="spacingAndGlyphs">VIBE CODING</text>
+      <text x="69" y="485" font-family="Arial, Helvetica, sans-serif" font-size="180" font-weight="900" textLength="864" lengthAdjust="spacingAndGlyphs">TOOLKIT</text>
+    </clipPath>
+  </defs>
+  <style>
+    .settle { animation: settle 1.4s cubic-bezier(.16,1,.3,1) both; }
+    .orbit { transform-origin: 1235px 340px; animation: orbit 4.6s cubic-bezier(.16,1,.3,1) both; }
+    .light { animation: light 4.6s ease-in-out both; }
+    .sweep { opacity: 0; animation: sweep 4.6s ease-in-out both; }
+    .trace { stroke-dasharray: 1500; stroke-dashoffset: 0; animation: trace 2.6s ease-out both; }
+    @keyframes settle { from { transform: translateY(12px); opacity: .7; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes orbit { from { transform: rotate(-14deg); } to { transform: rotate(0); } }
+    @keyframes light { 0%,100% { opacity: .55; } 45% { opacity: 1; } }
+    @keyframes sweep { 0%,15% { transform: translateX(-420px); opacity: 0; } 25%,65% { opacity: 1; } 100% { transform: translateX(1160px); opacity: 0; } }
+    @keyframes trace { from { stroke-dashoffset: 1500; } to { stroke-dashoffset: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .settle, .orbit, .light, .sweep, .trace { animation: none; }
+    }
+  </style>
+  <g clip-path="url(#frame)">
+    <rect width="1600" height="680" fill="url(#background)"/>
+    <ellipse class="light" cx="1250" cy="340" rx="490" ry="410" fill="url(#atmosphere)"/>
+    <path d="M980 0v680M1060 0v680M1140 0v680M1220 0v680M1300 0v680M1380 0v680M1460 0v680M1540 0v680M960 100h640M960 180h640M960 260h640M960 340h640M960 420h640M960 500h640M960 580h640" stroke="#d1aa76" stroke-opacity=".035" fill="none"/>
+    <rect width="1600" height="680" fill="url(#grain)"/>
+    <path d="M76 110h1448M76 570h1448" stroke="#c8b696" stroke-opacity=".16"/>
+    <path d="M76 111h110M1414 571h110" stroke="#e9bb7c" stroke-width="2"/>
+    <g fill="#d0d3d8" font-family="monospace" font-size="17" letter-spacing="2">
+      <text x="76" y="72">V / C</text>
+      <text x="168" y="72" fill="#929aa6">DEVELOPMENT TOOLKIT</text>
+      <text x="1524" y="72" text-anchor="end" fill="#aeb4bd">CLAUDE / CODEX / YOUR AGENT</text>
+    </g>
+    <g class="orbit" fill="none">
+      <circle cx="1235" cy="340" r="224" stroke="#d2a468" stroke-opacity=".12"/>
+      <circle cx="1235" cy="340" r="210" stroke="#e2b881" stroke-opacity=".1" stroke-dasharray="1 15"/>
+      <ellipse cx="1235" cy="340" rx="303" ry="88" transform="rotate(-32 1235 340)" stroke="#d8ac72" stroke-opacity=".32"/>
+      <ellipse cx="1235" cy="340" rx="282" ry="64" transform="rotate(30 1235 340)" stroke="#d8ac72" stroke-opacity=".13"/>
+      <path class="trace" d="M1123 146a224 224 0 0 1 323 275" stroke="#eec58e" stroke-opacity=".7" stroke-width="2"/>
+      <circle cx="1427" cy="225" r="4" fill="#f5d5a2" stroke="none"/>
+      <circle cx="1042" cy="455" r="3" fill="#edbe7f" stroke="none"/>
+    </g>
+    <circle cx="1235" cy="340" r="156" fill="#080b10" stroke="url(#metal)" stroke-width="3"/>
+    <circle cx="1235" cy="340" r="146" fill="none" stroke="#e0af70" stroke-opacity=".12"/>
+    <path d="M1200 292l43 48-43 48M1261 388h35" fill="none" stroke="#f2c58b" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path class="light" d="M1015 340h440" stroke="url(#beam)" stroke-width="17" filter="url(#glow)"/>
+    <path d="M946 340h593" stroke="url(#beam)" stroke-width="1"/>
+    <g class="settle">
+      <text x="78" y="201" fill="#e7ba7d" font-family="monospace" font-size="19" letter-spacing="3.4">MACHINE SETUP. PROJECT SETUP.</text>
+      <g fill="#f5f2eb" font-family="Arial, Helvetica, sans-serif" font-weight="900">
+        <text x="76" y="337" font-size="114" textLength="856" lengthAdjust="spacingAndGlyphs">VIBE CODING</text>
+        <text x="69" y="485" font-size="180" textLength="864" lengthAdjust="spacingAndGlyphs">TOOLKIT</text>
+      </g>
+    </g>
+    <g clip-path="url(#type)"><rect class="sweep" x="0" y="210" width="320" height="310" fill="url(#sweep)"/></g>
+    <g fill="#adb4bf" font-family="monospace" font-size="16" letter-spacing="1.8">
+      <text x="76" y="616">MACHINES</text>
+      <text x="226" y="616">PROJECTS</text>
+      <text x="370" y="616">CONTEXT</text>
+      <text x="530" y="616">QUALITY</text>
+      <text x="1524" y="616" text-anchor="end" fill="#e3b982">BUILD WITH INTENT. SHIP WITH FLOW.</text>
+    </g>
+  </g>
+</svg>

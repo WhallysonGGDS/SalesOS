@@ -1,0 +1,46 @@
+# Security review — {{project}}
+
+Private working report. Store outside the reviewed repository; redact credentials, personal data and internal endpoints. Remove unused placeholders before delivery.
+
+## Scope
+
+- Date and reviewer/client:
+- Mode: repository baseline / diff
+- Snapshot: commit IDs, endpoint or merge-base comparison, dirty layers and untracked files included:
+- Authorization assumptions and exclusions:
+- Assets, entry points, roles/tenants and trust boundaries:
+- Deployment assumptions requiring confirmation:
+
+## Coverage and evidence
+
+- Paths reviewed / excluded and reasons:
+- Skills, tools and reference versions actually used:
+- Unavailable capabilities or missing history:
+- Commands/tests, isolation and results (static / mocked / end-to-end):
+- Repository and index preservation check:
+
+## Findings
+
+Repeat for each substantiated finding or clearly labeled hypothesis. If none, state that none were substantiated within this scope.
+
+### {{ID}} — {{title}}
+
+- Severity and impact rationale:
+- Confidence: high / medium / low; status: confirmed / needs validation
+- Change origin: introduced / regressed / pre-existing / undetermined / not applicable
+- Location: file:line, revision or dirty layer
+- Redacted evidence and reachable entry-to-operation path:
+- Attacker control, privileges and other prerequisites:
+- Concrete impact and affected callers/data:
+- Counterevidence considered; reproduction/test result or missing proof:
+- Narrow proposed correction:
+- Next validation:
+
+## Remaining work and limitations
+
+- Unverified hypotheses and required evidence:
+- Hardening suggestions, separate from vulnerabilities:
+- Coverage gaps and next validation:
+- Report redaction and private destination verified:
+
+This review does not establish that the project is secure or certify compliance. Findings and confidence apply only to the recorded scope and evidence. No fixes were applied by this review.

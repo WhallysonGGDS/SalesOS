@@ -1,0 +1,431 @@
+{
+  "format_version": 1,
+  "template": true,
+  "generated_at": null,
+  "environment": {
+    "os": null,
+    "os_version": null,
+    "distribution": null,
+    "architecture": null,
+    "execution_context": null,
+    "shell": null,
+    "terminals": []
+  },
+  "components": [
+    {
+      "id": "system-prerequisites",
+      "name": "System prerequisites",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": null,
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "Record certificates, download/extraction/build tools and any Python or other dependencies required by the selected installers."
+      ]
+    },
+    {
+      "id": "system-package-manager",
+      "name": "System package manager",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": null,
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://git-scm.com/",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "github-cli",
+      "name": "GitHub CLI",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://cli.github.com/",
+      "scope": "machine",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "Selected GitHub CI workflow; authenticate through the client without recording secrets."
+      ]
+    },
+    {
+      "id": "node-version-manager",
+      "name": "fnm (preferred)",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/Schniz/fnm",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "Use an officially supported alternative when fnm is incompatible; record its actual name and source."
+      ]
+    },
+    {
+      "id": "node",
+      "name": "Node.js LTS",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://nodejs.org/",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "npm",
+      "name": "npm",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://docs.npmjs.com/",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "pnpm",
+      "name": "pnpm",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://pnpm.io/installation",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "ripgrep",
+      "name": "ripgrep",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/BurntSushi/ripgrep",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "fd",
+      "name": "fd",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/sharkdp/fd",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "jq",
+      "name": "jq",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://jqlang.org/",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "docker",
+      "name": "Docker client and engine",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://docs.docker.com/get-started/get-docker/",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "docker-compose",
+      "name": "Docker Compose",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://docs.docker.com/compose/",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "codex",
+      "name": "Codex CLI",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://learn.chatgpt.com/docs/codex/cli",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "claude-code",
+      "name": "Claude Code CLI",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://code.claude.com/docs/en/overview",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "rtk",
+      "name": "RTK",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/rtk-ai/rtk",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "ponytail",
+      "name": "Ponytail",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/DietrichGebert/ponytail",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "caveman",
+      "name": "Caveman skills",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/JuliusBrussee/caveman",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "superpowers",
+      "name": "Superpowers",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/obra/superpowers",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "context7",
+      "name": "Context7",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/upstash/context7",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "Remote MCP services use a URL and connection validation; do not invent a local package version."
+      ]
+    },
+    {
+      "id": "graphify",
+      "name": "Graphify (package: graphifyy)",
+      "required": true,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/Graphify-Labs/graphify",
+      "scope": null,
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": []
+    },
+    {
+      "id": "agent-browser",
+      "name": "agent-browser",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/vercel-labs/agent-browser",
+      "scope": "machine",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "Selected Next.js browser workflow; verify browser dependencies and current skill compatibility."
+      ]
+    },
+    {
+      "id": "nextjs-skills",
+      "name": "Next.js runtime and bundle skills",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/vercel/next.js/tree/canary/skills",
+      "scope": "project",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "next-dev-loop and next-bundle-optimizer; check version, bundler, browser, and analyzer support per project."
+      ]
+    },
+    {
+      "id": "postgresql-skill",
+      "name": "PostgreSQL guidance",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/supabase/agent-skills",
+      "scope": "project",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "supabase-postgres-best-practices applies to PostgreSQL with any provider."
+      ]
+    },
+    {
+      "id": "github-ci-skill",
+      "name": "GitHub CI repair",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/openai/skills/tree/main/skills/.curated/gh-fix-ci",
+      "scope": "project",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "gh-fix-ci for a compatible Codex workflow and authorized GitHub Actions PR."
+      ]
+    },
+    {
+      "id": "security-review-skill",
+      "name": "Differential security review",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://github.com/trailofbits/skills/tree/main/plugins/differential-review",
+      "scope": "project",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "differential-review for security-sensitive changes; record range and report destination."
+      ]
+    },
+    {
+      "id": "shadcn-skill",
+      "name": "shadcn/ui guidance",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://ui.shadcn.com/docs/skills",
+      "scope": "project",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "shadcn only where the UI system is adopted or explicitly selected."
+      ]
+    },
+    {
+      "id": "sentry-mcp",
+      "name": "Sentry MCP",
+      "required": false,
+      "status": "pending",
+      "version_or_revision": null,
+      "source": "https://mcp.sentry.dev/",
+      "scope": "project",
+      "path": null,
+      "install_method": null,
+      "update_method": null,
+      "notes": [
+        "Selected service only; record intended scope, client, discovery, OAuth, and read-only checks separately. No credentials."
+      ]
+    }
+  ],
+  "configuration": {
+    "shell_init_files": [],
+    "path_entries": [],
+    "node_default_version": null,
+    "node_project_auto_switch": null,
+    "preferences": {
+      "ponytail_intensity": "full",
+      "conversation_language": "user-preference",
+      "caveman_enabled": true,
+      "normal_code_docs_commits": true,
+      "context7_no_secrets": true
+    },
+    "llm_work_for_graphify_and_caveman": {
+      "client": "active-native-client",
+      "authentication": "existing-session-authentication",
+      "model": "current-session",
+      "delegated_model": "same-as-session-explicit",
+      "allow_provider_model_billing_or_proxy_switch": false
+    },
+    "codex_requested_permissions": {
+      "approval_policy": "never",
+      "sandbox_mode": "danger-full-access",
+      "effective_cli_status": "pending",
+      "effective_desktop_status": "pending"
+    }
+  },
+  "integrations": [],
+  "validation": [],
+  "pending_actions": []
+}

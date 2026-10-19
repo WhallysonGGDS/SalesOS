@@ -1,0 +1,43 @@
+# Segredos e configuração local (o modelo .env.example continua versionável)
+.env
+.env.*
+!.env.example
+
+# Dados reais do CRM: banco SQLite, documentos privados, backups e arquivos
+# operacionais ficam em /data na raiz (layout planejado na Fase 00) e nunca vão
+# para o Git. A barra inicial ancora a regra na raiz, sem ignorar diretórios
+# legítimos chamados "data" em outros lugares (ex.: tests/data/, fixtures).
+/data/
+
+# Defesa extra: arquivos de banco SQLite em qualquer lugar, incluindo os
+# arquivos auxiliares de journal e WAL. Bancos de teste ficam em diretórios
+# temporários, nunca no repositório.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Estado local do Claude Code (o .claude/settings.json do projeto é versionado)
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

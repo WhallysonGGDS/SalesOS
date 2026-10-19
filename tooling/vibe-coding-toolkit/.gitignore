@@ -1,0 +1,32 @@
+# Dependencies, builds and local validation
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.tmp/
+.cache/
+.npm/
+.pnpm-store/
+.vite/
+.eslintcache
+
+# Logs and OS files
+logs/
+*.log
+.DS_Store
+
+# Secrets; the public environment template remains versionable
+.env
+.env.*
+!.env.example
+
+# Private reference inputs and generated/client-specific state
+/EXAMPLE/
+/swapo-app/
+graphify-out/
+.vercel/
+.claude/settings.local.json
+.codex/auth.json

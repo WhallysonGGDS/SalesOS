@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="520" viewBox="0 0 1600 520" role="img" aria-labelledby="title description">
+  <title id="title">The right capability for each task</title>
+  <desc id="description">Static version: A coordinator assigns tasks to light, focused, and critical capabilities, with integration review.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1">
+      <stop stop-color="#090c12" />
+      <stop offset="1" stop-color="#0e1a1c" />
+    </linearGradient>
+    <radialGradient id="halo">
+      <stop stop-color="#85c6bc" stop-opacity=".1" />
+      <stop offset="1" stop-color="#85c6bc" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#b9d4cc" opacity=".08" />
+    </pattern>
+    <clipPath id="frame">
+      <rect width="1600" height="520" rx="20" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="1600" height="520" fill="url(#bg)" />
+    <rect width="1600" height="520" fill="url(#dots)" />
+    <ellipse cx="800" cy="310" rx="680" ry="330" fill="url(#halo)" />
+    <text x="76" y="66" fill="#e7ba7d" font-family="monospace" font-size="18" letter-spacing="3">02 / ORCHESTRATION</text>
+    <text x="76" y="140" fill="#f5f2eb" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="800">Right capability. Right task.</text>
+    <text x="76" y="182" fill="#aeb7c2" font-family="Arial, Helvetica, sans-serif" font-size="23">Less duplicated context. More ownership of results.</text>
+    <g fill="none" stroke="#85c6bc" stroke-opacity=".55" stroke-width="2">
+      <path d="M510 316h170V251h208" />
+      <path d="M510 316h378" />
+      <path d="M510 316h170v65h208" />
+      <path d="M1368 251h72v130h-72" stroke-opacity=".25" />
+      <path d="M1440 316h60m-12-8 12 8-12 8" />
+    </g>
+    <g fill="none" stroke="#e7ba7d">
+      <circle cx="416" cy="316" r="110" stroke-opacity=".12" />
+      <circle cx="416" cy="316" r="110" stroke-dasharray="80 612" stroke-width="2" />
+    </g>
+    <circle cx="416" cy="316" r="89" fill="#0d1218" stroke="#c8985b" stroke-width="2" />
+    <path d="M383 291l24 25-24 25m40 0h26" fill="none" stroke="#f2c58b" stroke-width="6" />
+    <text x="416" y="459" text-anchor="middle" fill="#e7ba7d" font-family="monospace" font-size="21" letter-spacing="2">COORDINATOR</text>
+    <g font-family="Arial, Helvetica, sans-serif">
+      <g>
+        <rect x="888" y="218" width="480" height="66" rx="10" fill="#101b20" stroke="#4d827a" />
+        <circle cx="922" cy="251" r="5" fill="#9bd4c6" />
+        <text x="946" y="260" fill="#d6eee8" font-size="25" font-weight="700">LIGHT</text>
+        <text x="1090" y="260" fill="#b1c0c4" font-size="20">Search and mechanical tasks</text>
+      </g>
+      <g>
+        <rect x="888" y="283" width="480" height="66" rx="10" fill="#101b20" stroke="#4d827a" />
+        <circle cx="922" cy="316" r="5" fill="#9bd4c6" />
+        <text x="946" y="325" fill="#d6eee8" font-size="25" font-weight="700">FOCUSED</text>
+        <text x="1090" y="325" fill="#b1c0c4" font-size="20">Bounded change</text>
+      </g>
+      <g>
+        <rect x="888" y="348" width="480" height="66" rx="10" fill="#1b1916" stroke="#c8985b" />
+        <circle cx="922" cy="381" r="5" fill="#f2c58b" />
+        <text x="946" y="390" fill="#f2c58b" font-size="25" font-weight="700">CRITICAL</text>
+        <text x="1090" y="390" fill="#c9c1b7" font-size="20">Judgment and high risk</text>
+      </g>
+    </g>
+    <text x="888" y="459" fill="#aeb7c2" font-family="monospace" font-size="18" letter-spacing="1">MINIMAL CONTEXT / FILES / ACCEPTANCE / CHECKS</text>
+  </g>
+</svg>

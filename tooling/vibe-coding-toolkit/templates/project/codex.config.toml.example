@@ -1,0 +1,5 @@
+# Merge into .codex/config.toml only when Context7 is not already provided
+# by an active plugin or MCP connection. Project config requires trust.
+# Keep authentication, model preferences and machine permissions outside this template.
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
