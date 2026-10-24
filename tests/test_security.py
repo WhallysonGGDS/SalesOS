@@ -31,6 +31,7 @@ def test_unknown_host_is_rejected(client: TestClient, host: str) -> None:
 @pytest.mark.parametrize("path", ["/", "/health"])
 def test_security_headers_are_present(client: TestClient, path: str) -> None:
     headers = client.get(path).headers
+    assert headers["cache-control"] == "no-store"  # páginas com dados pessoais fora do cache
     csp = headers["content-security-policy"]
     assert "default-src 'self'" in csp
     assert "frame-ancestors 'none'" in csp

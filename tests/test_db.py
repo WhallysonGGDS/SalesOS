@@ -88,3 +88,15 @@ def test_foreign_keys_are_restored_after_failed_migration(tmp_path: Path) -> Non
     with engine.connect() as conn:
         assert conn.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
     engine.dispose()
+
+
+def test_database_errors_do_not_carry_parameter_values(tmp_path: Path) -> None:
+    """Erros (e o log de erro 500) não podem levar dados pessoais nos parâmetros."""
+    engine = create_db_engine(f"sqlite:///{tmp_path / 'p.db'}")
+    with engine.begin() as conn:
+        conn.execute(text("CREATE TABLE t (email TEXT UNIQUE)"))
+        conn.execute(text("INSERT INTO t VALUES (:e)"), {"e": "qwx.sentinela@exemplo.com"})
+    with pytest.raises(IntegrityError) as erro, engine.begin() as conn:
+        conn.execute(text("INSERT INTO t VALUES (:e)"), {"e": "qwx.sentinela@exemplo.com"})
+    engine.dispose()
+    assert "qwx.sentinela" not in str(erro.value)

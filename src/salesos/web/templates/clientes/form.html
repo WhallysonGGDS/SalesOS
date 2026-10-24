@@ -9,7 +9,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
   <div class="grade-campos">
     {{ escolha("tipo", "Tipo", ["PJ", "PF"], dados.get("tipo", "PJ"), erros, rotulos) }}
-    {{ escolha("origem", "Como chegou até nós", origens, dados.get("origem"), erros, rotulos) }}
+    {{ escolha("origem", "Como chegou até nós", origens, dados.get("origem"), erros, rotulos, vazio="Escolha uma opção") }}
   </div>
   {{ campo("nome", "Nome ou razão social", dados.get("nome"), erros, maximo=200, obrigatorio=true) }}
   {{ campo("nome_fantasia", "Nome fantasia", dados.get("nome_fantasia"), erros, maximo=200) }}

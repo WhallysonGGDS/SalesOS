@@ -25,6 +25,8 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
     "Cross-Origin-Opener-Policy": "same-origin",
+    # As páginas mostram dados pessoais: nada fica no cache do navegador depois de anonimizar.
+    "Cache-Control": "no-store",
 }
 
 

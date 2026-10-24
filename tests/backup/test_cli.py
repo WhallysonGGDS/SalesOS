@@ -33,7 +33,8 @@ def _rodar(monkeypatch: pytest.MonkeyPatch, *args: str) -> None:
 def test_server_holds_the_lock_while_running(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     vistos: list[str] = []
 
-    def uvicorn_falso(*_a: Any, **_k: Any) -> None:
+    def uvicorn_falso(*_a: Any, **k: Any) -> None:
+        vistos.append(f"access_log={k.get('access_log')}")  # o log de acesso traria ?q=<nome>
         try:
             with trava(caminho_trava(db)):
                 vistos.append("livre")
@@ -42,7 +43,7 @@ def test_server_holds_the_lock_while_running(db: Path, monkeypatch: pytest.Monke
 
     monkeypatch.setattr("salesos.main.uvicorn.run", uvicorn_falso)
     _rodar(monkeypatch)
-    assert vistos == ["travada"]
+    assert vistos == ["access_log=False", "travada"]
     with trava(caminho_trava(db)):  # liberada ao encerrar
         pass
 
@@ -80,3 +81,14 @@ def test_restore_of_missing_file_exits_with_message_and_keeps_database(
         _rodar(monkeypatch, "restore", str(tmp_path / "inexistente.db"))
     assert nomes(db) == ["Atual"]
     assert controle_pendente(db) is None
+
+
+def test_backup_of_missing_database_exits_cleanly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SALESOS_DATABASE_URL", f"sqlite:///{tmp_path / 'nao-existe.db'}")
+    monkeypatch.setenv("SALESOS_BACKUP_DIR", str(tmp_path / "backups"))
+    with pytest.raises(SystemExit, match="Banco não encontrado"):
+        _rodar(monkeypatch, "backup")
+    assert not (tmp_path / "backups").exists()
+    assert not (tmp_path / "nao-existe.db").exists()

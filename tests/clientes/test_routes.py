@@ -334,3 +334,11 @@ def test_user_content_is_escaped_everywhere(web: TestClient, db: Path) -> None:
     invalido = _post(web, "/clientes", **(CLIENTE | {"nome": XSS, "email": "invalido"}))
     assert invalido.status_code == 422
     assert "<script>alert" not in invalido.text
+
+
+def test_new_client_must_choose_an_origin(web: TestClient, db: Path) -> None:
+    assert '<option value="" selected>' in web.get("/clientes/novo").text
+    resposta = _post(web, "/clientes", tipo="PJ", nome="Sem Origem", origem="")
+    assert resposta.status_code == 422
+    assert "Preencha este campo" in resposta.text
+    assert _consulta(db, "SELECT count(*) FROM clientes") == [(0,)]

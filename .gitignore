@@ -16,6 +16,9 @@
 *.db-journal
 *.db-wal
 *.db-shm
+# Cópias de backup/restauração (backup, manifesto, .pre-restore, .failed, staging, diário)
+# fora de /data/: também têm dados pessoais.
+*.db.*
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal

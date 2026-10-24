@@ -43,7 +43,8 @@ def sqlite_file(database_url: str) -> Path:
 def create_db_engine(database_url: str) -> Engine:
     """Cria o engine; em SQLite cria a pasta do arquivo e ativa FK, WAL e busy_timeout."""
     url = make_url(database_url)
-    engine = create_engine(url)
+    # hide_parameters: erros e logs do SQLAlchemy não levam valores (dados pessoais).
+    engine = create_engine(url, hide_parameters=True)
     if url.get_backend_name() == "sqlite":
         if url.database and url.database != ":memory:":
             Path(url.database).parent.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,6 @@
 import argparse
 import platform
+import sqlite3
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from importlib.metadata import version
@@ -104,6 +105,8 @@ def run() -> None:
     try:
         db = sqlite_file(settings.database_url)
         if args.comando == "backup":
+            if not db.exists():
+                raise SystemExit(f"Banco não encontrado: {db}")
             if controle_pendente(db):
                 raise SystemExit(PENDENTE)
             print(f"Backup criado: {criar_backup(db, settings.backup_dir)}")
@@ -126,8 +129,21 @@ def run() -> None:
                 if controle_pendente(db):
                     raise SystemExit(PENDENTE)
                 uvicorn.run(
-                    "salesos.main:create_app", factory=True, host=settings.host, port=settings.port
+                    "salesos.main:create_app",
+                    factory=True,
+                    host=settings.host,
+                    port=settings.port,
+                    access_log=False,  # a URL da busca (?q=) traria nomes e e-mails para o log
                 )
     # OSError: arquivo inexistente, disco cheio ou arquivo em uso; o banco já foi protegido.
-    except (Travado, RestauracaoRecusada, BackupInvalido, ValueError, OSError) as erro:
+    # RuntimeError: recover sem banco nem cópia; sqlite3.Error: banco ilegível ou não migrado.
+    except (
+        Travado,
+        RestauracaoRecusada,
+        BackupInvalido,
+        ValueError,
+        OSError,
+        RuntimeError,
+        sqlite3.Error,
+    ) as erro:
         raise SystemExit(str(erro)) from erro

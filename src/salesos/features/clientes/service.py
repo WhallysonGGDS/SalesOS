@@ -135,7 +135,8 @@ def listar_clientes(
     )
     if chave := search_key(termo):
         query = query.where(Cliente.busca.like(like_contains(chave), escape="\\"))
-    query = query.order_by(Cliente.nome, Cliente.id)
+    # `busca` começa pelo nome sem acento e em casefold: ordem alfabética de verdade.
+    query = query.order_by(Cliente.busca, Cliente.id)
     query = query.offset((pagina - 1) * por_pagina).limit(por_pagina + 1)
     itens = list(session.scalars(query))
     return Pagina(itens[:por_pagina], pagina, len(itens) > por_pagina)

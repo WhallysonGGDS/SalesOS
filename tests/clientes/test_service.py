@@ -167,3 +167,14 @@ def test_interactions_have_no_edit_or_delete_operation() -> None:
     proibidos = ("atualiz", "edit", "remov", "exclu", "apag")
     nomes = [n for n in dir(service) if "interac" in n and any(p in n for p in proibidos)]
     assert nomes == []
+
+
+def test_list_sorts_names_ignoring_accents_and_case(session: Session) -> None:
+    for nome in ("Zeta", "ágil", "Beta", "Ômega"):
+        _cliente(session, nome)
+    assert [c.nome for c in service.listar_clientes(session).itens] == [
+        "ágil",
+        "Beta",
+        "Ômega",
+        "Zeta",
+    ]

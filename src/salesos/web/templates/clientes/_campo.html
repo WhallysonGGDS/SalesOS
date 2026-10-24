@@ -25,10 +25,11 @@
 </div>
 {% endmacro %}
 
-{% macro escolha(nome, rotulo, opcoes, valor, erros, rotulos) %}
+{% macro escolha(nome, rotulo, opcoes, valor, erros, rotulos, vazio=none) %}
 <div class="campo{% if erros.get(nome) %} campo-invalido{% endif %}">
   <label for="{{ nome }}">{{ rotulo }}</label>
   <select id="{{ nome }}" name="{{ nome }}"{{ _descricao(nome, erros, none) }}>
+    {% if vazio %}<option value="" {% if not valor %}selected{% endif %}>{{ vazio }}</option>{% endif %}
     {% for o in opcoes %}<option value="{{ o }}" {% if o == valor %}selected{% endif %}>{{ rotulos[o] }}</option>{% endfor %}
   </select>
   {{ _rodape(nome, erros, none) }}
