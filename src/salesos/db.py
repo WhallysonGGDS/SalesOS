@@ -1,3 +1,5 @@
+import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -20,6 +22,14 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+def restringir(caminho: Path, modo: int = 0o600) -> None:
+    """Só o dono lê e escreve (POSIX). No Windows os bits POSIX não se aplicam: o `os.chmod`
+    só mexe no atributo "somente leitura", então a proteção fica com as ACLs da pasta do perfil.
+    """
+    if sys.platform != "win32":
+        os.chmod(caminho, modo)
 
 
 def _apply_sqlite_pragmas(dbapi_connection: Any, _record: Any) -> None:
@@ -47,7 +57,23 @@ def create_db_engine(database_url: str) -> Engine:
     engine = create_engine(url, hide_parameters=True)
     if url.get_backend_name() == "sqlite":
         if url.database and url.database != ":memory:":
-            Path(url.database).parent.mkdir(parents=True, exist_ok=True)
+            pasta = Path(url.database).parent
+            try:
+                pasta.mkdir(parents=True)
+            except FileExistsError:
+                pass  # pasta existente (talvez do usuário): fica como está
+            else:
+                restringir(pasta, 0o700)
+        arquivo = Path(url.database) if url.database and url.database != ":memory:" else None
+
+        def _restringir_arquivos(_dbapi_connection: Any, _record: Any) -> None:
+            # Antes dos PRAGMAs: o SQLite cria -wal e -shm com a permissão do banco.
+            for caminho in (arquivo, Path(f"{arquivo}-wal"), Path(f"{arquivo}-shm")):
+                if caminho is not None and caminho.exists():
+                    restringir(caminho)
+
+        if arquivo is not None:
+            event.listen(engine, "connect", _restringir_arquivos)
         event.listen(engine, "connect", _apply_sqlite_pragmas)
     return engine
 

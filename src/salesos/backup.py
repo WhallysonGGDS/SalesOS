@@ -20,6 +20,8 @@ from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 
+from salesos.db import restringir
+
 MIGRATIONS = Path(__file__).resolve().parents[2] / "migrations"
 
 
@@ -148,6 +150,7 @@ def _publicar(temporario: Path, final: Path) -> None:
 
 def criar_backup(db: Path, pasta: Path, prefixo: str = "salesos") -> Path:
     pasta.mkdir(parents=True, exist_ok=True)
+    restringir(pasta, 0o700)
     final = pasta / f"{prefixo}-{carimbo()}.db"
     manifesto = caminho_manifesto(final)
     temporario = final.with_name(final.name + ".tmp")
@@ -157,6 +160,7 @@ def criar_backup(db: Path, pasta: Path, prefixo: str = "salesos") -> Path:
     publicado = False
     try:
         _copiar_sqlite(db, temporario)
+        restringir(temporario)
         sincronizar(temporario)
         dados = {
             "arquivo": final.name,
@@ -166,6 +170,7 @@ def criar_backup(db: Path, pasta: Path, prefixo: str = "salesos") -> Path:
             "criado_em": datetime.now(UTC).isoformat(),
         }
         manifesto_tmp.write_text(json.dumps(dados, indent=2), encoding="utf-8")
+        restringir(manifesto_tmp)
         sincronizar(manifesto_tmp)
         _publicar(temporario, final)
         publicado = True

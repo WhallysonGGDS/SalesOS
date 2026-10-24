@@ -28,6 +28,7 @@ from salesos.backup import (
     sincronizar,
     verificar_backup,
 )
+from salesos.db import restringir
 from salesos.lock import caminho_trava, trava
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ def _gravar_estado(controle: Path, dados: dict[str, Any], estado: str) -> None:
     dados["estado"] = estado
     temporario = controle.with_name(controle.name + ".tmp")
     temporario.write_text(json.dumps(dados, indent=2), encoding="utf-8")
+    restringir(temporario)
     sincronizar(temporario)
     os.replace(temporario, controle)
     sincronizar(controle.parent)
@@ -78,6 +80,7 @@ def _arquivar(controle: Path, dados: dict[str, Any], resultado: str) -> None:
 
 def _copiar(origem: Path, destino: Path) -> None:
     shutil.copyfile(origem, destino)
+    restringir(destino)  # o staging vira o banco restaurado
     sincronizar(destino)
 
 
@@ -167,7 +170,9 @@ def _recuperar(db: Path, controle: Path) -> str:
         return estado
     if pre.exists():
         if db.exists():  # o banco novo chegou a entrar: é guardado, nunca apagado
-            _mover(db, db.with_name(f"{db.name}.failed-{dados['carimbo']}"))
+            falhou = db.with_name(f"{db.name}.failed-{dados['carimbo']}")
+            _mover(db, falhou)
+            restringir(falhou)
         _mover(pre, db)
     if not db.exists():
         raise RuntimeError(
@@ -218,6 +223,7 @@ def restaurar(
             dados["seguranca"] = str(seguranca)
             _gravar_estado(controle, dados, "safety_backed_up")
             _mover(db, pre)
+            restringir(pre)  # banco antigo pode ter sido criado com permissão mais aberta
             _gravar_estado(controle, dados, "original_moved")
             _mover(staging, db)
             _gravar_estado(controle, dados, "swapped")
