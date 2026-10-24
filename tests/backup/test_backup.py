@@ -125,3 +125,65 @@ def test_backup_from_other_schema_revision_is_refused(tmp_path: Path, pasta_back
     arquivo = criar_backup(antigo, pasta_backups)
     with pytest.raises(BackupInvalido, match="revisão"):
         verificar_backup(arquivo)
+
+
+ESTRUTURAS_ESTRANHAS = {
+    "trigger": (
+        "CREATE TABLE copia (nome TEXT); CREATE TRIGGER espiao BEFORE UPDATE ON clientes "
+        "BEGIN INSERT INTO copia VALUES (old.nome); END;"
+    ),
+    "tabela": "CREATE TABLE extra (x TEXT);",
+    "view": "CREATE VIEW resumo AS SELECT nome, email FROM clientes;",
+    "coluna": "ALTER TABLE clientes ADD COLUMN apelido TEXT;",
+    "indice": "CREATE INDEX ix_extra ON clientes (email);",
+}
+
+
+@pytest.mark.parametrize("sql", ESTRUTURAS_ESTRANHAS.values(), ids=ESTRUTURAS_ESTRANHAS.keys())
+def test_backup_with_unexpected_schema_is_refused(
+    tmp_path: Path, pasta_backups: Path, sql: str
+) -> None:
+    """Um arquivo forjado com objetos extras poderia guardar dados depois da anonimização."""
+    db = criar_banco(tmp_path / "salesos.db", "A")
+    conn = sqlite3.connect(db)
+    conn.executescript(sql)
+    conn.close()
+    arquivo = criar_backup(db, pasta_backups)  # o hash bate: só a estrutura denuncia
+    with pytest.raises(BackupInvalido, match="estrutura"):
+        verificar_backup(arquivo)
+
+
+def test_legitimate_schema_is_accepted_and_files_open_with_untrusted_schema(
+    tmp_path: Path, pasta_backups: Path
+) -> None:
+    arquivo = criar_backup(criar_banco(tmp_path / "salesos.db", "A"), pasta_backups)
+    verificar_backup(arquivo)
+    conn = backup.abrir_leitura(arquivo)
+    try:
+        assert conn.execute("PRAGMA trusted_schema").fetchone() == (0,)
+    finally:
+        conn.close()
+
+
+def test_object_hidden_behind_internal_name_is_refused(tmp_path: Path, pasta_backups: Path) -> None:
+    """Com writable_schema, um arquivo forjado pode dar nome `sqlite_*` a um trigger."""
+    db = criar_banco(tmp_path / "salesos.db", "A")
+    conn = sqlite3.connect(db)
+    conn.execute("CREATE TABLE copia (nome TEXT)")
+    conn.execute(
+        "CREATE TRIGGER t BEFORE UPDATE ON clientes BEGIN INSERT INTO copia VALUES (old.nome); END"
+    )
+    conn.execute("DROP TABLE copia")  # só o trigger fica como objeto extra
+    conn.execute("PRAGMA writable_schema=ON")
+    conn.execute("UPDATE sqlite_master SET name = 'sqlite_oculto' WHERE type = 'trigger'")
+    conn.commit()
+    conn.close()
+    # Forjado à mão (a API de backup nem abre esse arquivo), com manifesto coerente.
+    pasta_backups.mkdir()
+    arquivo = pasta_backups / "forjado.db"
+    arquivo.write_bytes(db.read_bytes())
+    sha = hashlib.sha256(arquivo.read_bytes()).hexdigest()
+    manifesto = {"sha256": sha, "revisao": "0002"}
+    arquivo.with_name(arquivo.name + ".json").write_text(json.dumps(manifesto), encoding="utf-8")
+    with pytest.raises(BackupInvalido):
+        verificar_backup(arquivo)

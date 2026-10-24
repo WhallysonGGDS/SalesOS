@@ -5,15 +5,19 @@ Nunca sobrescreve um arquivo e nunca apaga backups (D7). O manifesto guarda só 
 arquivo, o hash, a revisão do esquema, o tamanho e a data: nenhum dado pessoal.
 """
 
+import functools
 import hashlib
 import json
 import os
 import sqlite3
 import sys
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from alembic import command
+from alembic.config import Config
 from alembic.script import ScriptDirectory
 
 MIGRATIONS = Path(__file__).resolve().parents[2] / "migrations"
@@ -58,8 +62,48 @@ def sincronizar(caminho: Path) -> None:
 
 
 def abrir_leitura(caminho: Path) -> sqlite3.Connection:
-    """Somente leitura: não cria arquivo e não altera o banco."""
-    return sqlite3.connect(f"{caminho.resolve().as_uri()}?mode=ro", uri=True)
+    """Somente leitura: não cria arquivo e não altera o banco.
+
+    `trusted_schema=OFF`: funções com efeito colateral não rodam a partir de views ou triggers
+    de um arquivo que veio de fora.
+    """
+    conn = sqlite3.connect(f"{caminho.resolve().as_uri()}?mode=ro", uri=True)
+    conn.execute("PRAGMA trusted_schema=OFF")
+    return conn
+
+
+def _estrutura(conn: sqlite3.Connection) -> frozenset[tuple[Any, ...]]:
+    """Objetos do esquema (tabelas, índices, views, triggers) e as colunas de cada tabela.
+
+    O texto SQL não entra: o mesmo esquema legítimo pode ter texto diferente conforme o
+    caminho de migração. Nomes `sqlite_*` também entram: um arquivo forjado com
+    `writable_schema` pode usá-los para esconder objetos.
+    """
+    itens: set[tuple[Any, ...]] = set()
+    objetos = conn.execute("SELECT type, name, tbl_name FROM sqlite_master").fetchall()
+    for tipo, nome, tabela in objetos:
+        itens.add((tipo, nome, tabela))
+        if tipo == "table":
+            identificador = '"' + nome.replace('"', '""') + '"'
+            for coluna in conn.execute(f"PRAGMA table_xinfo({identificador})"):
+                itens.add(("coluna", nome, *coluna[1:]))
+    return frozenset(itens)
+
+
+@functools.cache
+def estrutura_esperada() -> frozenset[tuple[Any, ...]]:
+    """Esquema do head, obtido rodando as migrações reais num banco temporário."""
+    with tempfile.TemporaryDirectory() as pasta:
+        referencia = Path(pasta) / "referencia.db"
+        config = Config()
+        config.set_main_option("script_location", str(MIGRATIONS))
+        config.set_main_option("sqlalchemy.url", f"sqlite:///{referencia}")
+        command.upgrade(config, "head")
+        conn = abrir_leitura(referencia)
+        try:
+            return _estrutura(conn)
+        finally:
+            conn.close()
 
 
 def verificar_integridade(caminho: Path) -> str:
@@ -151,6 +195,18 @@ def verificar_backup(
     if not isinstance(dados, dict) or sha256_arquivo(arquivo) != dados.get("sha256"):
         raise BackupInvalido("SHA-256 do arquivo diverge do manifesto")
     revisao = verificar_integridade(arquivo)
-    if exigir_revisao and revisao != revisao_atual():
-        raise BackupInvalido(f"revisão do esquema {revisao} difere da atual {revisao_atual()}")
+    if exigir_revisao:
+        if revisao != revisao_atual():
+            raise BackupInvalido(f"revisão do esquema {revisao} difere da atual {revisao_atual()}")
+        conn = abrir_leitura(arquivo)
+        try:
+            diferentes = _estrutura(conn) ^ estrutura_esperada()
+        finally:
+            conn.close()
+        if diferentes:
+            # Só a quantidade: nomes de objetos de um arquivo de fora não vão para mensagens.
+            raise BackupInvalido(
+                f"estrutura do banco diferente da esperada ({len(diferentes)} diferença(s): "
+                "tabelas, colunas, índices, views ou triggers)"
+            )
     return dados

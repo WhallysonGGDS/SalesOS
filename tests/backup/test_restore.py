@@ -201,6 +201,24 @@ def test_backup_older_than_anonymization_needs_explicit_consent(
     assert nomes(db) == ["Pessoa Ficticia"]
 
 
+def test_backup_with_extra_trigger_is_refused_before_any_change(
+    tmp_path: Path, pasta_backups: Path
+) -> None:
+    origem = criar_banco(tmp_path / "origem" / "salesos.db", "Do backup")
+    conn = sqlite3.connect(origem)
+    conn.executescript(
+        "CREATE TABLE copia (nome TEXT); CREATE TRIGGER espiao BEFORE UPDATE ON clientes "
+        "BEGIN INSERT INTO copia VALUES (old.nome); END;"
+    )
+    conn.close()
+    arquivo = criar_backup(origem, pasta_backups)
+    db = criar_banco(tmp_path / "dados" / "salesos.db", "Atual")
+    with pytest.raises(RestauracaoRecusada, match="estrutura"):
+        restaurar(db, arquivo, pasta_backups)
+    _assert_original_intacto(db)
+    assert not list(db.parent.glob("*.pre-restore-*"))
+
+
 def _anonimizar_sql(db: Path, cliente_id: int) -> None:
     conn = sqlite3.connect(db)
     conn.execute(
