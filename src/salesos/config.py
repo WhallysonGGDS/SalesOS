@@ -1,4 +1,5 @@
 import secrets
+from pathlib import Path
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,6 +21,8 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
     database_url: str = "sqlite:///data/salesos.db"
+    # Backups nunca são apagados automaticamente (D7); a pasta fica fora do Git.
+    backup_dir: Path = Path("data/backups")
     # Sem valor configurado, cada execução gera um segredo novo: os formulários
     # abertos antes de reiniciar o servidor deixam de valer, o que é aceitável localmente.
     secret_key: SecretStr = Field(default_factory=lambda: SecretStr(secrets.token_urlsafe(32)))

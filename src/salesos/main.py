@@ -1,3 +1,4 @@
+import argparse
 import platform
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -12,8 +13,12 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from salesos.backup import BackupInvalido, criar_backup
 from salesos.config import ALLOWED_HOSTS, Settings
-from salesos.db import create_db_engine
+from salesos.db import create_db_engine, sqlite_file
+from salesos.features.clientes import router as clientes
+from salesos.lock import Travado, caminho_trava, trava
+from salesos.restore import RestauracaoRecusada, controle_pendente, recuperar, restaurar
 from salesos.security import form_token, require_csrf, security_middleware
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -45,6 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.templates = templates
 
     app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
+    clientes.configurar(app)
     app.middleware("http")(security_middleware)
     # Adicionado por último = executado primeiro: barra hosts estranhos (DNS rebinding).
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
@@ -73,7 +79,55 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     return app
 
 
+PENDENTE = "Há uma restauração inacabada. Rode `uv run salesos recover` antes de continuar."
+
+
+def _argumentos() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="salesos", description="CRM local da WE TECH.")
+    comandos = parser.add_subparsers(dest="comando")
+    comandos.add_parser("backup", help="cria um backup verificado (SHA-256 e integridade)")
+    restore = comandos.add_parser("restore", help="restaura um backup (servidor desligado)")
+    restore.add_argument("arquivo", type=Path)
+    restore.add_argument(
+        "--aceitar-reintroducao",
+        action="store_true",
+        help="aceita um backup anterior a uma anonimização (os dados voltam)",
+    )
+    comandos.add_parser("recover", help="termina com segurança uma restauração interrompida")
+    return parser.parse_args()
+
+
 def run() -> None:
-    """Ponto de entrada `salesos`: sobe o servidor só em loopback."""
+    """Ponto de entrada `salesos`: servidor (só loopback), backup, restore e recover."""
+    args = _argumentos()
     settings = Settings()
-    uvicorn.run("salesos.main:create_app", factory=True, host=settings.host, port=settings.port)
+    try:
+        db = sqlite_file(settings.database_url)
+        if args.comando == "backup":
+            if controle_pendente(db):
+                raise SystemExit(PENDENTE)
+            print(f"Backup criado: {criar_backup(db, settings.backup_dir)}")
+        elif args.comando == "restore":
+            pre = restaurar(db, args.arquivo, settings.backup_dir, args.aceitar_reintroducao)
+            print(f"Banco restaurado. O anterior foi preservado em: {pre}")
+        elif args.comando == "recover":
+            relatorio = recuperar(db, settings.backup_dir)
+            if relatorio.estado is None:
+                print("Nenhuma restauração pendente.")
+            else:
+                print(
+                    f"Restauração interrompida em '{relatorio.estado}' foi concluída com segurança."
+                )
+            for residuo in relatorio.residuos:
+                print(f"Arquivo temporário residual (apague se não precisar): {residuo}")
+        else:
+            # A trava fica com o servidor enquanto ele roda: restore e recover são recusados.
+            with trava(caminho_trava(db)):
+                if controle_pendente(db):
+                    raise SystemExit(PENDENTE)
+                uvicorn.run(
+                    "salesos.main:create_app", factory=True, host=settings.host, port=settings.port
+                )
+    # OSError: arquivo inexistente, disco cheio ou arquivo em uso; o banco já foi protegido.
+    except (Travado, RestauracaoRecusada, BackupInvalido, ValueError, OSError) as erro:
+        raise SystemExit(str(erro)) from erro

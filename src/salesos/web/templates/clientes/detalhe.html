@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
+{% block title %}{{ cliente.nome }} · SalesOS{% endblock %}
+{% block content %}
+{% set anonimizado = cliente.anonimizado_em is not none %}
+<p class="trilha"><a href="{{ '/clientes?arquivados=1' if cliente.archived_at else '/clientes' }}">{{ "Clientes arquivados" if cliente.archived_at else "Clientes" }}</a></p>
+
+<div class="cabecalho">
+  <h1 class="titulo">{{ cliente.nome }}</h1>
+  {% if not anonimizado %}
+  <div class="acoes">
+    <a class="botao" href="/clientes/{{ cliente.id }}/editar">Editar dados</a>
+    <form method="post" action="/clientes/{{ cliente.id }}/{{ 'desarquivar' if cliente.archived_at else 'arquivar' }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <button class="botao" type="submit">{{ "Restaurar cliente" if cliente.archived_at else "Arquivar cliente" }}</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+{% if anonimizado %}
+<p class="faixa" role="status">Anonimizado em <time datetime="{{ cliente.anonimizado_em | data_iso }}">{{ cliente.anonimizado_em | data_local }}</time>. Os dados pessoais foram removidos e este registro não aceita alterações.</p>
+{% elif cliente.archived_at %}
+<p class="faixa" role="status">Arquivado em <time datetime="{{ cliente.archived_at | data_iso }}">{{ cliente.archived_at | data_local }}</time>. Ele não aparece na lista principal até ser restaurado.</p>
+{% endif %}
+
+<dl class="ficha">
+  <div><dt>Tipo</dt><dd>{{ rotulos[cliente.tipo] }}</dd></div>
+  <div><dt>Origem</dt><dd>{{ rotulos[cliente.origem] }}</dd></div>
+  {% if cliente.nome_fantasia %}<div><dt>Nome fantasia</dt><dd>{{ cliente.nome_fantasia }}</dd></div>{% endif %}
+  {% if cliente.email %}<div><dt>E-mail</dt><dd>{{ cliente.email }}</dd></div>{% endif %}
+  {% if cliente.observacoes %}<div class="ficha-larga"><dt>Observações</dt><dd class="texto-livre">{{ cliente.observacoes }}</dd></div>{% endif %}
+</dl>
+
+<div class="colunas">
+  <section id="contatos" class="secao" aria-labelledby="titulo-contatos">
+    <h2 id="titulo-contatos">Contatos</h2>
+    {% if contatos %}
+    <ul class="contatos">
+      {% for c in contatos %}
+      <li>
+        <span class="contato-nome">{{ c.nome }}</span>
+        {% if c.cargo %}<span class="contato-meta">{{ c.cargo }}</span>{% endif %}
+        {% if c.email %}<span class="contato-meta">{{ c.email }}</span>{% endif %}
+        <span class="contato-acoes">
+          <a href="/contatos/{{ c.id }}/editar">Editar <span class="vh">contato {{ c.nome }}</span></a>
+          <form method="post" action="/contatos/{{ c.id }}/remover">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button class="link" type="submit">Remover <span class="vh">contato {{ c.nome }}</span></button>
+          </form>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% elif anonimizado %}
+    <p class="vazio-linha">Os contatos foram removidos na anonimização.</p>
+    {% else %}
+    <p class="vazio-linha">Nenhum contato ainda. Adicione quem fala por este cliente.</p>
+    {% endif %}
+    {% if not anonimizado %}
+    <form class="formulario compacto" method="post" action="/clientes/{{ cliente.id }}/contatos" novalidate aria-labelledby="titulo-novo-contato">
+      <h3 id="titulo-novo-contato">Adicionar contato</h3>
+      {{ resumo_erros(erros_contato, "O contato não foi salvo. Corrija os campos indicados.") }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      {{ campo("nome", "Nome", contato.get("nome"), erros_contato, maximo=200, obrigatorio=true) }}
+      {{ campo("cargo", "Cargo", contato.get("cargo"), erros_contato, maximo=100) }}
+      {{ campo("email", "E-mail", contato.get("email"), erros_contato, tipo="email", maximo=254) }}
+      <button class="botao" type="submit">Adicionar contato</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section id="linha" class="secao" aria-labelledby="titulo-linha">
+    <h2 id="titulo-linha">Linha do tempo</h2>
+    {% if not anonimizado %}
+    <form class="formulario compacto" method="post" action="/clientes/{{ cliente.id }}/interacoes" novalidate aria-labelledby="titulo-nova-interacao">
+      <h3 id="titulo-nova-interacao">Registrar interação</h3>
+      {{ resumo_erros(erros_interacao, "A interação não foi registrada. Corrija os campos indicados.") }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <div class="grade-campos">
+        {{ escolha("tipo", "Tipo", tipos_interacao, interacao.get("tipo"), erros_interacao, rotulos) }}
+        {{ campo("ocorrida_em", "Data e hora", interacao.get("ocorrida_em", agora), erros_interacao, tipo="datetime-local") }}
+        {% if contatos %}
+        <div class="campo">
+          <label for="contato_id">Com quem</label>
+          <select id="contato_id" name="contato_id">
+            <option value="">Ninguém em especial</option>
+            {% for c in contatos %}<option value="{{ c.id }}" {% if interacao.get("contato_id") == c.id|string %}selected{% endif %}>{{ c.nome }}</option>{% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </div>
+      {{ campo("resumo", "O que aconteceu", interacao.get("resumo"), erros_interacao, tipo="textarea", maximo=5000, dica="Registros não podem ser editados depois. Até 5.000 caracteres.") }}
+      <button class="botao botao-principal" type="submit">Registrar interação</button>
+    </form>
+    {% endif %}
+    {% if linha %}
+    <ol class="tempo">
+      {% for i in linha %}
+      <li class="{{ 'tempo-sistema' if i.tipo == 'sistema' else 'tempo-humano' }}">
+        <time datetime="{{ i.ocorrida_em | data_iso }}">{{ i.ocorrida_em | data_local }}</time>
+        <div class="tempo-corpo">
+          <p class="tempo-tipo">{{ rotulos[i.tipo] }}{% if i.contato_id in nomes_contatos %} com {{ nomes_contatos[i.contato_id] }}{% endif %}</p>
+          <p class="texto-livre">{{ i.resumo }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if linha | length >= 50 %}<p class="dica">Mostrando as 50 interações mais recentes.</p>{% endif %}
+    {% else %}
+    <p class="vazio-linha">Nenhuma interação registrada.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if not anonimizado %}
+<section class="zona-perigo" aria-labelledby="titulo-anonimizar">
+  <h2 id="titulo-anonimizar">Anonimizar cliente</h2>
+  <p>Apaga de forma irreversível, nesta aplicação, os dados pessoais deste cliente e remove os contatos. A linha do tempo fica, sem o conteúdo das conversas. Backups feitos antes continuam com os dados.</p>
+  <form method="post" action="/clientes/{{ cliente.id }}/anonimizar" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <div class="campo{% if erro_anonimizar %} campo-invalido{% endif %}">
+      <label for="confirmacao">Para confirmar, digite o número {{ cliente.id }}</label>
+      <input id="confirmacao" name="confirmacao" inputmode="numeric" autocomplete="off"
+        {% if erro_anonimizar %}aria-invalid="true" aria-describedby="erro-confirmacao"{% endif %}>
+      {% if erro_anonimizar %}<p class="erro" id="erro-confirmacao">{{ erro_anonimizar }}</p>{% endif %}
+    </div>
+    <button class="botao botao-perigo" type="submit">Anonimizar definitivamente</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

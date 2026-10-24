@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ "Clientes arquivados" if arquivados else "Clientes" }} · SalesOS{% endblock %}
+{% block content %}
+<div class="cabecalho">
+  <h1 id="titulo" class="titulo">{{ "Clientes arquivados" if arquivados else "Clientes" }}</h1>
+  {% if not arquivados %}<a class="botao botao-principal" href="/clientes/novo">Cadastrar cliente</a>{% endif %}
+</div>
+
+<div class="ferramentas">
+  <form class="busca" method="get" action="/clientes" role="search">
+    <label for="q">Buscar por nome ou e-mail</label>
+    <div class="busca-linha">
+      <input id="q" name="q" type="search" value="{{ q }}" maxlength="200">
+      {% if arquivados %}<input type="hidden" name="arquivados" value="1">{% endif %}
+      <button class="botao" type="submit">Buscar</button>
+    </div>
+  </form>
+  <p class="alternar">
+    {% if arquivados %}<a href="/clientes">Voltar aos clientes ativos</a>
+    {% else %}<a href="/clientes?arquivados=1">Ver arquivados</a>{% endif %}
+  </p>
+</div>
+
+{% if resultado.itens %}
+<ul class="indice" aria-labelledby="titulo">
+  {% for c in resultado.itens %}
+  <li class="cliente">
+    <a class="indice-nome" href="/clientes/{{ c.id }}">{{ c.nome }}</a>
+    {% if c.nome_fantasia %}<span class="indice-fantasia">{{ c.nome_fantasia }}</span>{% endif %}
+    <span class="indice-meta">{{ rotulos[c.tipo] }}</span>
+    <span class="indice-meta">{{ rotulos[c.origem] }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% elif q %}
+<div class="vazio">
+  <p>Nenhum cliente {{ "arquivado " if arquivados }}encontrado para “{{ q }}”.</p>
+  <a href="{{ '/clientes?arquivados=1' if arquivados else '/clientes' }}">Limpar busca</a>
+</div>
+{% elif arquivados %}
+<div class="vazio"><p>Nenhum cliente arquivado. Clientes arquivados saem da lista principal e aparecem aqui.</p></div>
+{% else %}
+<div class="vazio">
+  <p>Nenhum cliente cadastrado ainda.</p>
+  <a class="botao botao-principal" href="/clientes/novo">Cadastrar o primeiro cliente</a>
+</div>
+{% endif %}
+
+{% if anterior or proxima %}
+<nav class="paginas" aria-label="Páginas">
+  {% if anterior %}<a href="{{ anterior }}" rel="prev">Página anterior</a>{% else %}<span></span>{% endif %}
+  <span aria-current="page">Página {{ resultado.pagina }}</span>
+  {% if proxima %}<a href="{{ proxima }}" rel="next">Próxima página</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

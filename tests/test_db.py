@@ -16,6 +16,8 @@ def test_sqlite_pragmas(tmp_path: Path) -> None:
         assert conn.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
         assert conn.execute(text("PRAGMA journal_mode")).scalar_one() == "wal"
         assert conn.execute(text("PRAGMA busy_timeout")).scalar_one() == 5000
+        # Zera o conteúdo apagado no arquivo (apoio à anonimização; não é garantia forense).
+        assert conn.execute(text("PRAGMA secure_delete")).scalar_one() == 1
     engine.dispose()
 
 

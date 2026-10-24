@@ -10,10 +10,13 @@
 <body>
   <a class="skip" href="#conteudo">Ir para o conteúdo</a>
   <header class="topbar">
-    <span class="brand">WE TECH</span>
+    <a class="brand" href="/">WE TECH</a>
+    <nav class="nav" aria-label="Principal">
+      <a href="/clientes" {% if secao == "clientes" %}aria-current="page"{% endif %}>Clientes</a>
+    </nav>
     <span class="status"><span class="status-dot" aria-hidden="true"></span>Rodando só neste computador</span>
   </header>
-  <main id="conteudo" class="page">
+  <main id="conteudo" class="{% block main_class %}page{% endblock %}">
     {% block content %}{% endblock %}
   </main>
 </body>

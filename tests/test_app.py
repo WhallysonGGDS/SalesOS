@@ -1,5 +1,9 @@
+from typing import Annotated
+
+from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
+from sqlalchemy import text
 
 from salesos.config import Settings
 from salesos.main import create_app
@@ -32,3 +36,21 @@ def test_home_shows_usable_ipv6_address() -> None:
     settings = Settings(host="::1", secret_key=SecretStr("x" * 32))
     with TestClient(create_app(settings), base_url="http://[::1]") as client:
         assert "[::1]:8000" in client.get("/").text
+
+
+def test_request_session_is_usable_and_closed_after_request(app: FastAPI) -> None:
+    from sqlalchemy.orm import Session
+
+    from salesos.db import get_session
+
+    sessions: list[Session] = []
+
+    @app.get("/_sessao")
+    def _rota(session: Annotated[Session, Depends(get_session)]) -> dict[str, int]:
+        sessions.append(session)
+        return {"um": int(session.execute(text("SELECT 1")).scalar_one())}
+
+    with TestClient(app, base_url="http://127.0.0.1") as client:
+        assert client.get("/_sessao").json() == {"um": 1}
+    assert len(sessions) == 1
+    assert not sessions[0].in_transaction()

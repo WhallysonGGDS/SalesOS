@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
+{% block title %}{{ "Editar cliente" if cliente else "Novo cliente" }} · SalesOS{% endblock %}
+{% block content %}
+<p class="trilha"><a href="{{ '/clientes/%d' % cliente.id if cliente else '/clientes' }}">{{ cliente.nome if cliente else "Clientes" }}</a></p>
+<h1 class="titulo">{{ "Editar cliente" if cliente else "Novo cliente" }}</h1>
+<form class="formulario" method="post" action="{{ '/clientes/%d' % cliente.id if cliente else '/clientes' }}" novalidate>
+  {{ resumo_erros(erros, "Não foi possível salvar. Corrija os campos indicados abaixo.") }}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+  <div class="grade-campos">
+    {{ escolha("tipo", "Tipo", ["PJ", "PF"], dados.get("tipo", "PJ"), erros, rotulos) }}
+    {{ escolha("origem", "Como chegou até nós", origens, dados.get("origem"), erros, rotulos) }}
+  </div>
+  {{ campo("nome", "Nome ou razão social", dados.get("nome"), erros, maximo=200, obrigatorio=true) }}
+  {{ campo("nome_fantasia", "Nome fantasia", dados.get("nome_fantasia"), erros, maximo=200) }}
+  {{ campo("email", "E-mail", dados.get("email"), erros, tipo="email", maximo=254) }}
+  {{ campo("observacoes", "Observações", dados.get("observacoes"), erros, tipo="textarea", maximo=5000, dica="Até 5.000 caracteres.") }}
+  <div class="acoes">
+    <button class="botao botao-principal" type="submit">{{ "Salvar alterações" if cliente else "Cadastrar cliente" }}</button>
+    <a href="{{ '/clientes/%d' % cliente.id if cliente else '/clientes' }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

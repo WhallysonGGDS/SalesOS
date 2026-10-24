@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import inspect, text
 
 from salesos.db import create_db_engine
@@ -25,7 +26,7 @@ def test_upgrade_check_and_downgrade(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0001"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0002"
 
     # Sem diferenças entre os modelos e o banco migrado (levanta exceção se houver).
     command.check(config)
@@ -43,7 +44,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "9001"
-down_revision = "0001"
+down_revision = "{head}"
 
 
 def upgrade() -> None:
@@ -66,7 +67,10 @@ def test_migration_with_foreign_key_violation_is_rolled_back(tmp_path: Path) -> 
     """A checagem de FK precisa desfazer a migração inteira, não só avisar."""
     scripts = tmp_path / "migrations"
     shutil.copytree(ROOT / "migrations", scripts, ignore=shutil.ignore_patterns("__pycache__"))
-    (scripts / "versions" / "9001_orfao.py").write_text(ORPHAN_MIGRATION, encoding="utf-8")
+    # Encadeia no head atual, para o teste continuar válido a cada nova migração.
+    head = ScriptDirectory(str(scripts)).get_current_head()
+    orphan = ORPHAN_MIGRATION.replace("{head}", str(head))
+    (scripts / "versions" / "9001_orfao.py").write_text(orphan, encoding="utf-8")
     db_url = f"sqlite:///{tmp_path / 'orfao.db'}"
     config = _alembic_config(db_url)
     config.set_main_option("script_location", str(scripts))
@@ -81,4 +85,18 @@ def test_migration_with_foreign_key_violation_is_rolled_back(tmp_path: Path) -> 
     engine.dispose()
     assert "filho" not in tables
     assert "pai" not in tables
+    # Toda a execução do upgrade é uma transação só (transactional_ddl): nada fica aplicado.
     assert version is None
+
+
+def test_0002_downgrade_to_0001_removes_only_phase_02_tables(tmp_path: Path) -> None:
+    db_url = f"sqlite:///{tmp_path / 'fase02.db'}"
+    config = _alembic_config(db_url)
+    command.upgrade(config, "head")
+    command.downgrade(config, "0001")
+    engine = create_db_engine(db_url)
+    with engine.connect() as conn:
+        assert set(inspect(conn).get_table_names()) == {"alembic_version"}
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0001"
+    engine.dispose()
+    command.upgrade(config, "head")

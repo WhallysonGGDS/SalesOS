@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, resumo_erros %}
+{% block title %}Editar contato · SalesOS{% endblock %}
+{% block content %}
+<p class="trilha"><a href="/clientes/{{ contato.cliente_id }}">Voltar ao cliente</a></p>
+<h1 class="titulo">Editar contato</h1>
+<form class="formulario" method="post" action="/contatos/{{ contato.id }}" novalidate>
+  {{ resumo_erros(erros, "Não foi possível salvar. Corrija os campos indicados abaixo.") }}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+  {{ campo("nome", "Nome", dados.get("nome"), erros, maximo=200, obrigatorio=true) }}
+  {{ campo("cargo", "Cargo", dados.get("cargo"), erros, maximo=100) }}
+  {{ campo("email", "E-mail", dados.get("email"), erros, tipo="email", maximo=254) }}
+  <div class="acoes">
+    <button class="botao botao-principal" type="submit">Salvar contato</button>
+    <a href="/clientes/{{ contato.cliente_id }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

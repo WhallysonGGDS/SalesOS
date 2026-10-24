@@ -3,14 +3,15 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from fastapi import Request
 from sqlalchemy import Connection, Engine, MetaData, create_engine, event
 from sqlalchemy.engine import make_url
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Session
 
 # Nomes de constraints estáveis para que o Alembic gere migrações previsíveis.
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
-    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "uq": "uq_%(table_name)s_%(column_0_N_name)s",  # todas as colunas, unidas por "_"
     "ck": "ck_%(table_name)s_%(constraint_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
@@ -26,7 +27,17 @@ def _apply_sqlite_pragmas(dbapi_connection: Any, _record: Any) -> None:
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute("PRAGMA busy_timeout=5000")
+    # Zera o conteúdo apagado no arquivo (apoio à anonimização; não é garantia forense).
+    cursor.execute("PRAGMA secure_delete=ON")
     cursor.close()
+
+
+def sqlite_file(database_url: str) -> Path:
+    """Caminho do arquivo SQLite; backup e restauração só existem para esse caso."""
+    url = make_url(database_url)
+    if url.get_backend_name() != "sqlite" or not url.database or url.database == ":memory:":
+        raise ValueError("backup e restauração exigem um banco SQLite em arquivo")
+    return Path(url.database)
 
 
 def create_db_engine(database_url: str) -> Engine:
@@ -71,3 +82,9 @@ def check_foreign_keys(connection: Connection) -> None:
         raise RuntimeError(
             f"A migração deixou {len(violations)} violação(ões) de chave estrangeira"
         )
+
+
+def get_session(request: Request) -> Iterator[Session]:
+    """Dependência do FastAPI: uma sessão por requisição, sempre fechada no fim."""
+    with Session(request.app.state.engine) as session:
+        yield session
