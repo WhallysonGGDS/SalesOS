@@ -7,7 +7,7 @@ Escuro, minimalista, editorial. Uma marca monumental na entrada, muito espaço n
 | Token | Valor | Uso | Contraste sobre `--noite` |
 |---|---|---|---|
 | `--noite` | `#0a1120` | Fundo | — |
-| `--superficie` | `#101a2e` | Campos, faixas de aviso | — |
+| `--superficie` | `#101a2e` | Fundo dos campos | — |
 | `--linha` | `#1c2940` | Divisores decorativos (nunca bordas de controle) | 1,29 |
 | `--borda` | `#5d6d88` | Bordas de campos e botões | 3,60 (WCAG 1.4.11 exige 3) |
 | `--texto` | `#e9edf4` | Texto principal, botão principal | 16,06 |

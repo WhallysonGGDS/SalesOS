@@ -6,8 +6,9 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
 
 ## Estado atual
 
-- **Implementado:** fundação técnica (Fase 01). Ainda não há nenhuma funcionalidade de CRM. Detalhes em `docs/architecture.md` e `docs/phases.md`.
-- **Próxima etapa:** Fase 02 (clientes e histórico), que só começa com aprovação explícita do usuário.
+- **Implementado:** fundação técnica (Fase 01) e clientes, contatos, interações, anonimização, backup e restauração (Fase 02). Detalhes em `docs/architecture.md` e `docs/phases.md`.
+- **Pendente:** validação no Windows (checklist em `docs/setup.md`); CPF, CNPJ e telefone (sem fonte oficial aprovada); propostas D–G da revisão da Fase 02.
+- **Próxima etapa:** Fase 03 (oportunidades e funil), que só começa com aprovação explícita do usuário.
 - **Stack:** Python 3.15.0, uv, FastAPI, SQLAlchemy 2.1, Alembic, SQLite, Pydantic Settings, Jinja2, pytest + HTTPX, Ruff e mypy (ADR `docs/decisions/0001-stack-e-python.md`).
 
 ## Comandos canônicos
@@ -27,6 +28,7 @@ Execute a partir da raiz do projeto. Não invente scripts.
 - O trabalho segue fases. Não avance de fase sem aprovação explícita do usuário.
 - Commit, push, PR e publicação exigem autorização explícita a cada vez. Um plugin ou skill que sugira commit não é autorização.
 - Comandos destrutivos, instalação global, serviços pagos, credenciais e uso de dados reais exigem uma decisão do usuário.
+- Agentes nunca executam `salesos restore` ou `salesos recover` contra o banco real nem leem `data/`: só com `SALESOS_DATABASE_URL` e `SALESOS_BACKUP_DIR` apontando para uma pasta temporária e dados fictícios.
 - Instalar uma ferramenta não autoriza executar as ações dela.
 
 ## Fluxo de trabalho

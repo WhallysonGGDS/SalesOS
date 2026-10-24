@@ -10,8 +10,8 @@ O proprietário da WE TECH, como único usuário na primeira versão.
 | Fase | Conteúdo | Situação |
 |---|---|---|
 | 00 | Descoberta e planejamento | Concluída |
-| 01 | Fundação técnica | Concluída (este estado) |
-| 02 | Clientes e histórico | Planejada |
+| 01 | Fundação técnica | Concluída |
+| 02 | Clientes e histórico | Implementada e verificada no Linux; validação no Windows pendente; CPF, CNPJ e telefone pendentes |
 | 03 | Oportunidades e funil | Planejada |
 | 04 | Tarefas e agenda | Planejada |
 | 05 | Serviços, propostas, contratos e assinaturas | Planejada |
@@ -26,5 +26,5 @@ O proprietário da WE TECH, como único usuário na primeira versão.
 - Dados pessoais tratados conforme a LGPD: mínimo necessário, testes só com dados fictícios.
 - Estados comerciais distintos e nunca equivalentes: oportunidade ganha, contrato assinado, cobrança registrada, valor recebido.
 
-## Critérios de aceite da Fase 01
-Ver `docs/phases.md` (Fase 01) e as evidências em `docs/setup.md`.
+## Critérios de aceite
+Ver `docs/phases.md` (Fases 01 e 02) e as evidências em `docs/setup.md`. Tratamento de dados pessoais: `docs/privacy.md`.
