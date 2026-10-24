@@ -129,22 +129,27 @@ def _voltar_wal(db: Path) -> None:
         pass
 
 
-def _anonimizados(conn: sqlite3.Connection) -> set[int]:
+def _ids(conn: sqlite3.Connection, anonimizados: bool) -> set[int]:
+    condicao = "IS NOT NULL" if anonimizados else "IS NULL"
     try:
-        return {
-            r[0] for r in conn.execute("SELECT id FROM clientes WHERE anonimizado_em IS NOT NULL")
-        }
+        sql = f"SELECT id FROM clientes WHERE anonimizado_em {condicao}"  # noqa: S608 (fixo)
+        return {r[0] for r in conn.execute(sql)}
     finally:
         conn.close()
 
 
 def _checar_anonimizacao(db: Path, staging: Path, aceitar: bool) -> None:
+    """Recusa só quem está anonimizado agora e volta com dados no backup.
+
+    Cliente criado depois do backup não existe nele, e quem já estava anonimizado no backup
+    não traz nada de volta: nenhum dos dois é reintrodução.
+    """
     try:
         atual = sqlite3.connect(f"{db.resolve().as_uri()}?mode=rw", uri=True, timeout=0)
-        anonimizados_agora = _anonimizados(atual)
+        anonimizados_agora = _ids(atual, anonimizados=True)
     except sqlite3.OperationalError as erro:  # outro programa segura o banco
         raise RestauracaoRecusada(FECHE_OS_PROGRAMAS) from erro
-    reintroduzidos = anonimizados_agora - _anonimizados(abrir_leitura(staging))
+    reintroduzidos = anonimizados_agora & _ids(abrir_leitura(staging), anonimizados=False)
     if reintroduzidos and not aceitar:
         raise RestauracaoRecusada(
             f"O backup é anterior à anonimização de {len(reintroduzidos)} cliente(s) e traria "
