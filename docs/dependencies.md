@@ -43,5 +43,5 @@ ast_serialize 0.13.1 (MIT), certifi 2026.10.18 (**MPL-2.0**), httpcore 1.0.9 (BS
 - **Custo:** todas são gratuitas e de código aberto.
 - **MPL-2.0** (certifi, pathspec): copyleft fraco por arquivo, só em ferramentas de desenvolvimento usadas sem modificação. Sem obrigação para o código do SalesOS.
 - **opentelemetry-api:** exigida pelo FastAPI 0.147. Só a API, sem SDK nem exportador: não envia telemetria.
-- **httpx × httpx2:** o Starlette 1.9 avisa que usar `httpx` no `TestClient` está obsoleto e recomenda `httpx2` (BSD-3-Clause, mantido pela Pydantic). Mantido `httpx`, que é a stack aprovada e funciona. A troca é uma proposta pendente de aprovação; o aviso aparece nos testes de propósito.
+- **httpx × httpx2 (decisão D13, Fase 02):** o Starlette 1.9 avisa que usar `httpx` no `TestClient` está obsoleto e recomenda `httpx2` (BSD-3-Clause, mantido pela Pydantic). **Decisão:** manter `httpx` 0.28.1, que funciona com a versão atual, e documentar o aviso (`docs/quality.md`). Não migrar para `httpx2` nesta fase. Uma troca futura exige avaliação própria (versões, lock, testes, Windows) e autorização explícita.
 - **Auditoria:** `uvx pip-audit --strict --disable-pip --no-deps -r <export do uv.lock>` em 2026-10-19 resultou em "No known vulnerabilities found".

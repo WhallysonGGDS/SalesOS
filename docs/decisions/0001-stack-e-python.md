@@ -13,5 +13,5 @@
 
 **Consequências:**
 - Todas as dependências binárias têm wheels `cp315` para Windows x64.
-- O Starlette avisa sobre a troca `httpx` → `httpx2` (pendente de decisão).
+- O Starlette avisa sobre a troca `httpx` → `httpx2`. Decisão D13 (Fase 02): manter `httpx` e documentar o aviso (`docs/quality.md`).
 - PostgreSQL só numa migração futura.
