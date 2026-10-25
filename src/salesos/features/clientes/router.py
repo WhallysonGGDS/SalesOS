@@ -154,6 +154,7 @@ def _detalhe(
         "nomes_contatos": {c.id: c.nome for c in contatos},
         "linha": service.listar_interacoes(session, cliente_id),
         "oportunidades": oportunidades.oportunidades_do_cliente(session, cliente_id),
+        "oportunidades_max": oportunidades.DO_CLIENTE_MAX,
         "agora": datetime.now().strftime("%Y-%m-%dT%H:%M"),
         "contato": {},
         "erros_contato": {},

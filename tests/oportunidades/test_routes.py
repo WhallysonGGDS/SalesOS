@@ -297,3 +297,19 @@ def test_out_of_range_ids_are_refused_without_server_error(web: TestClient, iden
         assert web.get(url).status_code in (404, 422), url
     for url in (f"/oportunidades/{ident}", f"/oportunidades/{ident}/etapa"):
         assert _post(web, url, titulo="X", etapa="negociacao").status_code in (404, 422), url
+
+
+def test_stage_form_of_a_lost_opportunity_keeps_its_reason(web: TestClient) -> None:
+    oportunidade_id = _criar(web)
+    url = f"/oportunidades/{oportunidade_id}/etapa"
+    _post(web, url, etapa="perdida", motivo_perda="concorrente")
+    detalhe = web.get(f"/oportunidades/{oportunidade_id}").text
+    assert '<option value="concorrente" selected>' in detalhe
+    assert _post(web, url, etapa="perdida", motivo_perda="concorrente").status_code == 303
+
+
+def test_full_column_shows_that_there_are_more(web: TestClient) -> None:
+    cliente_id = _cliente(web)
+    for i in range(21):
+        _criar(web, cliente_id, titulo=f"Op {i:02d}")
+    assert ">20+<" in web.get("/oportunidades").text.replace(" ", "")

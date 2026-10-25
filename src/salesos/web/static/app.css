@@ -166,6 +166,8 @@ input:hover, select:hover, textarea:hover { border-color: var(--cinza); }
 .grade-campos { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
 .formulario > .botao { justify-self: start; }
 .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem; }
+/* Links soltos também são alvos de 44 px (WCAG 2.5.5), como os botões. */
+.acoes > a, .cabecalho > a, .mais, .trilha a { min-height: var(--alvo); display: inline-flex; align-items: center; }
 
 /* --- lista de clientes: um índice, não cards --- */
 .ferramentas { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem 2rem; }

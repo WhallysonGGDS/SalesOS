@@ -47,7 +47,7 @@
     </li>
     {% endfor %}
   </ol>
-  {% if oportunidades | length >= 50 %}<p class="dica">Mostrando as 50 oportunidades mais recentes.</p>{% endif %}
+  {% if oportunidades | length >= oportunidades_max %}<p class="dica">Mostrando as {{ oportunidades_max }} oportunidades mais recentes.</p>{% endif %}
   {% else %}
   <p class="vazio-linha">Nenhuma oportunidade com este cliente.</p>
   {% endif %}

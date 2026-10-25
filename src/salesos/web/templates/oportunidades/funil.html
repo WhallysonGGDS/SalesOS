@@ -22,7 +22,7 @@
 <section class="funil {{ 'funil-finais' if loop.last else 'funil-abertas' }}" aria-label="{{ nome }}">
   {% for etapa in visiveis %}
   <section class="etapa" aria-labelledby="etapa-{{ etapa }}">
-    <h2 id="etapa-{{ etapa }}">{{ rotulos[etapa] }} <span class="contagem">{{ colunas[etapa] | length }}<span class="vh"> oportunidades</span></span></h2>
+    <h2 id="etapa-{{ etapa }}">{{ rotulos[etapa] }} <span class="contagem">{{ colunas[etapa] | length }}{% if colunas[etapa] | length >= por_coluna %}+<span class="vh"> (mostrando as mais recentes)</span>{% endif %}<span class="vh"> oportunidades</span></span></h2>
     {% if colunas[etapa] %}
     {{ itens(colunas[etapa], nomes) }}
     {% if colunas[etapa] | length >= por_coluna %}<a class="mais" href="/oportunidades/lista?{{ (filtros | dictsort | list + [('etapa', etapa)]) | urlencode }}">Mostrando as {{ por_coluna }} mais recentes. Ver todas</a>{% endif %}

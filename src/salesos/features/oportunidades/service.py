@@ -121,6 +121,12 @@ def mudar_etapa(session: Session, oportunidade_id: int, dados: MudancaEtapaIn) -
     oportunidade = oportunidade_editavel(session, oportunidade_id)
     de, para = oportunidade.etapa, dados.etapa
     if de == para:
+        motivo = (oportunidade.motivo_perda, oportunidade.motivo_detalhe)
+        if (dados.motivo_perda, dados.motivo_detalhe) != motivo:
+            raise RegraViolada(
+                "motivo_perda",
+                "Para corrigir o motivo, reabra em uma etapa aberta e marque como perdida de novo",
+            )
         return oportunidade  # R5: envio repetido não gera movimentação nem evento
     if de in ETAPAS_FINAIS and para in ETAPAS_FINAIS:
         raise RegraViolada("etapa", "Reabra em uma etapa aberta antes de mudar o resultado")

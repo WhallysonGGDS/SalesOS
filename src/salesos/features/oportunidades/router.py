@@ -208,7 +208,11 @@ def _detalhe(
         "oportunidade": oportunidade,
         "cliente": cliente,
         "historico": service.movimentacoes(session, oportunidade_id),
-        "mudanca": {"etapa": oportunidade.etapa},
+        "mudanca": {
+            "etapa": oportunidade.etapa,
+            "motivo_perda": oportunidade.motivo_perda,
+            "motivo_detalhe": oportunidade.motivo_detalhe,
+        },
         "erros": {},
     }
     return _pagina(request, "oportunidades/detalhe.html", contexto | extra, status)

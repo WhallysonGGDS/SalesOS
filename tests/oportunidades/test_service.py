@@ -246,3 +246,15 @@ def test_history_is_never_rewritten_by_any_operation(session: Session) -> None:
     assert len(_historico(session, oportunidade)) == 5
     publicas = {n for n in dir(service) if not n.startswith("_")}
     assert not {n for n in publicas if "movimenta" in n} - {"movimentacoes"}
+
+
+def test_changing_only_the_reason_of_a_lost_opportunity_asks_to_reopen(session: Session) -> None:
+    oportunidade = _mudar(session, _nova(session), "perdida", motivo_perda="preco")
+    antes = _contagens(session)
+    _mudar(session, oportunidade, "perdida", motivo_perda="preco")  # sem mudança: nada (R5)
+    with pytest.raises(service.RegraViolada, match="reabra") as erro:
+        _mudar(session, oportunidade, "perdida", motivo_perda="adiado")
+    assert erro.value.campo == "motivo_perda"
+    session.rollback()
+    assert _contagens(session) == antes
+    assert session.get(Oportunidade, oportunidade.id).motivo_perda == "preco"  # type: ignore[union-attr]
