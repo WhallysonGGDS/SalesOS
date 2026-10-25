@@ -9,12 +9,13 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, select, text, update
+from sqlalchemy import String, cast, delete, select, text, update
 from sqlalchemy.orm import Session
 
 from salesos.features.clientes.models import Cliente, Contato, Interacao
 from salesos.features.clientes.normalize import like_contains, search_key
 from salesos.features.clientes.schemas import ClienteIn, ContatoIn, InteracaoIn
+from salesos.features.oportunidades.models import Oportunidade
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def _agora() -> datetime:
     return datetime.now(UTC)
 
 
-def _evento(session: Session, cliente_id: int, resumo: str) -> None:
+def registrar_evento(session: Session, cliente_id: int, resumo: str) -> None:
     session.add(
         Interacao(cliente_id=cliente_id, tipo="sistema", ocorrida_em=_agora(), resumo=resumo)
     )
@@ -106,7 +107,7 @@ def criar_cliente(session: Session, dados: ClienteIn) -> Cliente:
     cliente.busca = _busca(cliente)
     session.add(cliente)
     session.flush()
-    _evento(session, cliente.id, "Cliente criado")
+    registrar_evento(session, cliente.id, "Cliente criado")
     session.commit()
     return cliente
 
@@ -116,7 +117,7 @@ def atualizar_cliente(session: Session, cliente_id: int, dados: ClienteIn) -> Cl
     _email_livre(session, dados.email, exceto_id=cliente.id)
     if mudou := _aplicar(cliente, dados):
         cliente.busca = _busca(cliente)
-        _evento(session, cliente.id, f"Cliente atualizado: {', '.join(mudou)}")
+        registrar_evento(session, cliente.id, f"Cliente atualizado: {', '.join(mudou)}")
         session.commit()
     return cliente
 
@@ -146,7 +147,7 @@ def arquivar_cliente(session: Session, cliente_id: int) -> None:
     cliente = obter_cliente(session, cliente_id)
     if cliente.archived_at is None:
         cliente.archived_at = _agora()
-        _evento(session, cliente.id, "Cliente arquivado")
+        registrar_evento(session, cliente.id, "Cliente arquivado")
         session.commit()
 
 
@@ -154,7 +155,7 @@ def desarquivar_cliente(session: Session, cliente_id: int) -> None:
     cliente = cliente_editavel(session, cliente_id)
     if cliente.archived_at is not None:
         cliente.archived_at = None
-        _evento(session, cliente.id, "Cliente desarquivado")
+        registrar_evento(session, cliente.id, "Cliente desarquivado")
         session.commit()
 
 
@@ -180,7 +181,7 @@ def adicionar_contato(session: Session, cliente_id: int, dados: ContatoIn) -> Co
     _email_de_contato_livre(session, cliente.id, dados.email)
     contato = Contato(cliente_id=cliente.id, **dados.model_dump())
     session.add(contato)
-    _evento(session, cliente.id, "Contato adicionado")
+    registrar_evento(session, cliente.id, "Contato adicionado")
     session.commit()
     return contato
 
@@ -190,7 +191,7 @@ def atualizar_contato(session: Session, contato_id: int, dados: ContatoIn) -> Co
     cliente_editavel(session, contato.cliente_id)
     _email_de_contato_livre(session, contato.cliente_id, dados.email, exceto_id=contato.id)
     if mudou := _aplicar(contato, dados):
-        _evento(session, contato.cliente_id, f"Contato atualizado: {', '.join(mudou)}")
+        registrar_evento(session, contato.cliente_id, f"Contato atualizado: {', '.join(mudou)}")
         session.commit()
     return contato
 
@@ -201,7 +202,7 @@ def remover_contato(session: Session, contato_id: int) -> None:
     cliente_id = contato.cliente_id
     cliente_editavel(session, cliente_id)
     session.delete(contato)
-    _evento(session, cliente_id, "Contato removido")
+    registrar_evento(session, cliente_id, "Contato removido")
     session.commit()
 
 
@@ -243,12 +244,22 @@ def anonimizar_cliente(session: Session, cliente_id: int) -> None:
     cliente.archived_at = cliente.archived_at or agora
     cliente.anonimizado_em = agora
     session.execute(delete(Contato).where(Contato.cliente_id == cliente.id))
+    # R10 (ADR 0006): some o texto livre; valor, etapa e datas ficam (retenção: pendência P1).
+    session.execute(
+        update(Oportunidade)
+        .where(Oportunidade.cliente_id == cliente.id)
+        .values(
+            titulo="Oportunidade #" + cast(Oportunidade.id, String),
+            observacoes=None,
+            motivo_detalhe=None,
+        )
+    )
     session.execute(
         update(Interacao)
         .where(Interacao.cliente_id == cliente.id, Interacao.tipo != "sistema")
         .values(resumo=CONTEUDO_REMOVIDO)
     )
-    _evento(session, cliente.id, "Cliente anonimizado")
+    registrar_evento(session, cliente.id, "Cliente anonimizado")
     session.commit()
     ocupado = session.execute(text("PRAGMA wal_checkpoint(TRUNCATE)")).scalar()
     session.commit()

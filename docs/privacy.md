@@ -1,6 +1,6 @@
 # Privacidade e dados pessoais
 
-Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fase 02) e o que ele **não** consegue garantir. Não é parecer jurídico sobre a LGPD.
+Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fases 02 e 03) e o que ele **não** consegue garantir. Não é parecer jurídico sobre a LGPD.
 
 ## Quais dados pessoais existem
 
@@ -9,6 +9,7 @@ Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fase 02
 | Cliente | nome ou razão social, nome fantasia, e-mail, observações |
 | Contato | nome, cargo, e-mail |
 | Interação | resumo livre do que aconteceu (pode conter qualquer coisa que for digitada) |
+| Oportunidade (Fase 03) | título, observações e detalhe do motivo de perda (texto livre, pode conter dados pessoais); valor, etapa e datas (dados comerciais ligados ao cliente) |
 
 **Não existem** no sistema: CPF, CNPJ e telefone. Ficam bloqueados até que as regras oficiais (Receita Federal e Anatel) sejam lidas, documentadas e aprovadas (decisões D6, D11 e D12). A coluna `documento` existe no banco, mas nenhum formulário a preenche.
 
@@ -23,7 +24,7 @@ Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fase 02
 ## Proteções em uso
 
 - O servidor só escuta em `127.0.0.1` e recusa outros nomes de host.
-- **Eventos** da linha do tempo registram só a ação e o nome dos campos ("Cliente atualizado: email, nome"), nunca os valores (D4).
+- **Eventos** da linha do tempo registram só a ação e o nome dos campos ("Cliente atualizado: email, nome"), nunca os valores (D4). Eventos de oportunidades levam só o número, a ação e a etapa: nunca título, observações, detalhe do motivo nem valor (R9).
 - **Logs:** o log de acesso do servidor está desligado (a URL da busca traria nomes e e-mails), e os erros do banco não levam os valores dos parâmetros.
 - **Navegador:** todas as páginas saem com `Cache-Control: no-store`, para não ficarem guardadas no cache depois de uma anonimização.
 - **Permissões (Linux e macOS):** banco, backups e cópias com `0600` e a pasta de backups com `0700`. **No Windows** os bits POSIX não se aplicam; a proteção depende das permissões (ACL) da pasta onde o projeto está. Mantenha o projeto dentro da sua pasta de usuário. Não verificado no Windows.
@@ -42,6 +43,8 @@ O que acontece, de forma irreversível **dentro do SalesOS** (D9):
 | Contatos | removidos |
 | Interações registradas por pessoas | o resumo vira "[conteúdo removido]"; tipo e data ficam |
 | Eventos do sistema | ficam (não têm dados pessoais) e ganham "Cliente anonimizado" |
+| Oportunidades | título vira "Oportunidade #&lt;número&gt;"; observações e detalhe do motivo de perda apagados; **valor, etapa, motivo da lista e datas ficam** (ver pendência abaixo) |
+| Histórico de etapas | fica como está (só etapas e datas) |
 | Busca | os dados antigos não são mais encontrados |
 | Alterações | o cliente passa a recusar qualquer mudança |
 
@@ -52,6 +55,18 @@ No arquivo do banco, `secure_delete` zera o conteúdo apagado e um checkpoint es
 - **Não é apagamento forense.** Podem continuar existindo cópias em: backups e cópias de restauração feitos antes, Lixeira do Windows, histórico de versões do OneDrive ou de outro serviço de sincronização, cópias de sombra do Windows (Restauração do Sistema), cópias manuais e setores antigos de SSD.
 - Se um leitor estiver com o banco aberto no momento, o checkpoint do `-wal` pode ficar incompleto; o servidor registra um aviso (sem dados pessoais) e o conteúdo antigo some no próximo checkpoint completo.
 - **Restaurar um backup antigo traz os dados de volta.** Por isso a restauração recusa um backup em que um cliente hoje anonimizado ainda tinha dados, e só aceita com `--aceitar-reintroducao`. Clientes criados depois do backup não disparam esse aviso.
+
+## Pendência P1 — finalidade e prazo de retenção (bloqueia dados reais)
+
+Depois de anonimizar um cliente, o SalesOS mantém valor, etapa, motivo da lista e datas das oportunidades dele. **Esses dados não são declarados anônimos**: continuam ligados ao registro do cliente, e a combinação com outras informações pode permitir identificá-lo.
+
+Ainda não estão definidos:
+
+- a finalidade de manter esses dados (por exemplo, histórico comercial ou indicadores);
+- o prazo de retenção e o que acontece ao fim dele;
+- a revisão desta política com essa definição.
+
+Até isso ser decidido pelo responsável pelo tratamento (com orientação jurídica, se necessário), **não use dados reais**. Este documento descreve o comportamento do software; não é parecer jurídico sobre a LGPD.
 
 ## Backups antigos com dados de clientes anonimizados
 

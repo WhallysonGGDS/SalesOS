@@ -30,13 +30,19 @@ async def formulario(request: Request, campos: tuple[str, ...]) -> dict[str, str
     return {c: v for c in campos if isinstance(v := form.get(c), str)}
 
 
+class Mensagem(ValueError):
+    """Erro de validação cujo texto aparece como está no campo do formulário."""
+
+
 def erros(erro: ValidationError) -> dict[str, str]:
     """Mensagens por campo, sem repetir o valor enviado."""
     mensagens: dict[str, str] = {}
     for item in erro.errors():
         campo = str(item["loc"][0]) if item["loc"] else "geral"
         tipo, ctx = item["type"], item.get("ctx") or {}
-        if tipo == "string_too_long":
+        if isinstance(ctx.get("error"), Mensagem):
+            texto = str(ctx["error"])
+        elif tipo == "string_too_long":
             texto = f"Máximo de {ctx.get('max_length')} caracteres"
         elif tipo in ("missing", "string_too_short", "string_type"):
             texto = "Preencha este campo"

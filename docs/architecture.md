@@ -28,6 +28,9 @@ src/salesos/
     router.py     Rotas finas e páginas de erro sem dados pessoais
   features/oportunidades/  (Fase 03, em construção)
     models.py     Oportunidade e Movimentacao; CHECKs de etapa, motivo, fechamento e valor
+    periodo.py    Dias locais → intervalo UTC (regras de fuso do sistema para cada data)
+    schemas.py    Entrada validada: valor pt-BR, datas AAAA-MM-DD, motivo só na perda, filtros
+    service.py    Regras R1–R10; operação, movimentação e evento no mesmo commit
   web/templates base.html, index.html, clientes/*.html (Jinja2, sem JavaScript)
   web/static    app.css
 migrations/     Alembic; 0001 = linha de base vazia; 0002 = clientes, contatos, interações;
