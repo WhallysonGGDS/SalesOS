@@ -2,7 +2,7 @@
 
 CRM comercial próprio da WE TECH. Roda localmente, para um único usuário, sem exposição à rede.
 
-**Estado:** Fase 02 (clientes, contatos e histórico) implementada e verificada no Linux. **A validação no Windows está pendente**, e dados reais só depois da checklist de `docs/setup.md`. CPF, CNPJ e telefone ainda não existem (aguardam as regras oficiais). Funil, tarefas e propostas chegam nas próximas fases (`docs/phases.md`).
+**Estado:** clientes, contatos, histórico (Fase 02) e o funil de oportunidades (Fase 03) implementados e verificados no Linux. **A validação no Windows está pendente.** Dados reais só depois da checklist de `docs/setup.md`, do procedimento de restauração de backups antigos (B1) e da definição de retenção (P1, `docs/privacy.md`). CPF, CNPJ e telefone ainda não existem (aguardam as regras oficiais). Tarefas e propostas chegam nas próximas fases (`docs/phases.md`).
 
 ## Começar
 

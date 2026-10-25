@@ -1,7 +1,7 @@
 # Design
 
 ## Direção
-Escuro, minimalista, editorial. Uma marca monumental na entrada, muito espaço negativo e dados em lista de definições. Sem cards, sem decoração. A lista de clientes é um índice com linhas finas. O elemento marcante é a linha do tempo: uma régua vertical com as datas numa coluna à esquerda, em que o que pessoas registraram aparece inteiro e os eventos automáticos do sistema ficam em segundo plano.
+Escuro, minimalista, editorial. Uma marca monumental na entrada, muito espaço negativo e dados em lista de definições. Sem cards, sem decoração. A lista de clientes é um índice com linhas finas. No funil, as quatro etapas em andamento ficam lado a lado na ordem real e os resultados (ganha, perdida) numa faixa separada por uma linha mais forte; cada oportunidade é uma linha de índice (título, cliente, valor), nunca um card. O elemento marcante é a linha do tempo: uma régua vertical com as datas numa coluna à esquerda, em que o que pessoas registraram aparece inteiro e os eventos automáticos do sistema ficam em segundo plano.
 
 ## Tokens (`src/salesos/web/static/app.css`)
 | Token | Valor | Uso | Contraste sobre `--noite` |

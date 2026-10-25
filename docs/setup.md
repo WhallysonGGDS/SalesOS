@@ -46,6 +46,16 @@ Toolkit: Vibe Coding Toolkit, revisão `790a895` (detalhes em `docs/toolkit/`).
 | Chromium: 7 telas × 320/390/768/1440 px; contraste de texto e bordas; foco em todas as paradas (inclui `datetime-local`); link "Ir para o conteúdo"; sem rolagem horizontal, erros de console ou CSP | Passou |
 | Dados usados | Só fictícios, em bancos temporários; `data/` nunca foi aberto |
 
+## Evidências da Fase 03 (Cloud, Linux, 2026-10-25)
+
+| Verificação | Resultado |
+|---|---|
+| Ruff, formatação e mypy strict | Sem erros |
+| `uv run pytest` | 426 passed, 1 skipped (teste só do Windows), 1 aviso conhecido |
+| Migração `0003` num banco temporário: upgrade, downgrade, upgrade de novo e `alembic check` | Passou |
+| Chromium: 9 telas do funil e 6 de clientes × 320/390/768/1440 px; contraste, foco no Tab, alvos de 44 px, rótulos, um `h1`, sem rolagem horizontal nem erro de CSP | Passou (dados fictícios no scratchpad) |
+| Dados usados | Só fictícios, em bancos temporários; `data/` nunca foi aberto |
+
 ## Pendente no Windows
 
 Fase 01:
@@ -60,7 +70,7 @@ Fase 01:
 
 Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/Users/<você>/AppData/Local/Temp/salesos-teste/salesos.db` e `SALESOS_BACKUP_DIR` numa pasta de teste, com dados fictícios. Ao terminar, remova essas linhas do `.env`.
 
-1. `uv run pytest`: resultado `267 passed, 4 skipped, 1 warning`. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
+1. `uv run pytest`: resultado `414 passed, 13 skipped, 1 warning`. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
 2. Com o servidor ligado, `uv run salesos backup` cria o backup e o `.db.json`.
 3. Com o servidor ligado, `uv run salesos restore <backup>` é recusado ("Outro processo do SalesOS…").
 4. Servidor desligado e o banco aberto no DB Browser: o restore é recusado ("Feche os programas…") sem alterar nada.
@@ -73,8 +83,11 @@ Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/User
 11. Nenhum `.tmp`, `.staging-` ou `salesos.db.restore.json` sobrando ao final.
 12. (Fase 02.1) Banco aberto no DB Browser **com uma alteração não gravada** (que segura o arquivo): `uv run salesos backup` termina em até cerca de 15 s com "bloqueado por outro programa", sem criar arquivo em `backups\`. Desfaça a alteração no DB Browser ao terminar.
 13. (Fase 02.1) Com o servidor desligado, crie um `salesos.db.restore.json` de teste com o conteúdo `{"estado":"quiesced"}` na pasta do banco de teste: `uv run salesos recover` responde "Diário de restauração inválido" sem mover nada. Apague esse arquivo de teste depois.
+14. (Fase 03) Funil com cliente fictício: criar oportunidade com valor `1.234,56`, mover entre etapas, perder com motivo, reabrir e ganhar; o histórico mostra todas as etapas, e as datas e horas aparecem no fuso do Windows.
+15. (Fase 03) Filtro de período no funil: uma oportunidade fechada perto da meia-noite aparece no dia local certo; `De` depois de `Até` mostra a mensagem no campo.
+16. (Fase 03) Seletor de data do filtro e da previsão de fechamento em pt-BR (dd/mm/aaaa).
 
-Só depois disso, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
+Só depois disso, **do procedimento de restauração de backups antigos (B1, ADR 0006) e da definição de retenção (P1, `docs/privacy.md`)**, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
 
 ## Limitações conhecidas
 

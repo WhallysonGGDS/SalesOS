@@ -7,7 +7,7 @@
 1. Instale o Git for Windows e o uv (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`. Esse é o instalador oficial; leia-o antes de executar, se preferir.
 2. Baixe o repositório pelo GitHub Desktop (branch `claude/practical-bell-w2zwqp`) numa pasta **dentro do seu usuário** (por exemplo, `C:\Users\<você>\Projetos\SalesOS`), fora de pastas sincronizadas pelo OneDrive se possível. Abra o terminal nessa pasta.
 3. `uv sync --locked`: o uv baixa o Python 3.15 e instala as versões exatas do `uv.lock` em `.venv`.
-4. `uv run alembic upgrade head`: cria ou atualiza `data\salesos.db`. Rode de novo sempre que atualizar o código.
+4. `uv run alembic upgrade head`: cria ou atualiza `data\salesos.db`. Rode de novo sempre que atualizar o código. Depois de atualizar para a Fase 03 (revisão `0003`), `salesos restore` recusa backups feitos antes da atualização (B1).
 5. Opcional: copie `.env.example` para `.env` para fixar a porta, o segredo dos formulários ou a pasta de backups.
 
 Rode todos os comandos a partir da raiz do projeto: os caminhos `data\...` são relativos a ela.
@@ -17,7 +17,8 @@ Rode todos os comandos a partir da raiz do projeto: os caminhos `data\...` são 
 - `uv run salesos` e abra http://127.0.0.1:8000. Para encerrar, Ctrl+C no terminal.
 - **Clientes**: cadastrar, buscar por nome ou e-mail, editar, arquivar e restaurar.
 - **Na tela do cliente**: contatos, registro de interações (ligação, reunião, mensagem, e-mail, nota) e a linha do tempo. Interações não podem ser editadas nem apagadas depois.
-- **Anonimizar** é irreversível: leia `docs/privacy.md` antes.
+- **Funil** (Fase 03): na página do cliente, **Nova oportunidade**. O valor é em reais no formato `1.234,56`. A oportunidade começa em *Novo lead* e muda de etapa pelo formulário **Mudar etapa**: livre entre as etapas em andamento; *Venda ganha* exige valor; *Venda perdida* exige o motivo. Para trocar ganha por perdida (ou o contrário), reabra antes numa etapa em andamento. O histórico de etapas nunca é apagado. Venda ganha **não** significa contrato assinado nem pagamento recebido.
+- **Anonimizar** é irreversível: leia `docs/privacy.md` antes. As oportunidades do cliente perdem título, observações e detalhe do motivo; valor, etapa e datas ficam.
 - Ainda não existem CPF, CNPJ e telefone (aguardam a validação das regras oficiais).
 
 ## Backup
@@ -64,4 +65,4 @@ Se o comando responder "Diário de restauração inválido", o registro pendente
 uv run ruff check . ; uv run ruff format --check . ; uv run mypy ; uv run pytest
 ```
 
-No Windows, o resultado esperado do pytest é `267 passed, 4 skipped, 1 warning`: os 4 testes de permissões POSIX não se aplicam ao Windows e o teste exclusivo do Windows (troca recusada com o arquivo aberto) precisa **rodar e passar**. Detalhes em `docs/quality.md`.
+No Windows, o resultado esperado do pytest é `414 passed, 13 skipped, 1 warning`: os 4 testes de permissões POSIX e os 9 de fuso com `tzset` não se aplicam ao Windows e o teste exclusivo do Windows (troca recusada com o arquivo aberto) precisa **rodar e passar**. Detalhes em `docs/quality.md`.

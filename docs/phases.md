@@ -86,5 +86,43 @@ Escopo autorizado: E, D, S2 e divisão de `tests/backup/test_restore.py`. Fora d
 - O limite do corpo não impede conexões lentas (slowloris) nem muitas conexões simultâneas; o risco é aceitável num app que só escuta em 127.0.0.1.
 - Um diário bem formado, mas trocado por outro de uma restauração antiga, ainda desfaz aquela restauração (sem apagar nada). Isso exige escrever em `data/`, o que já está fora do modelo de ameaça.
 
+## Fase 03 — Oportunidades e funil (implementada e verificada no Linux)
+
+Plano: `docs/superpowers/plans/2026-10-25-fase-03-funil.md`. Decisões: ADR `0006-funil.md` (R1–R10, P1–P3).
+
+| Etapa | Entrega | Commit |
+|---|---|---|
+| 0 | ADR 0006 e decisões P1–P3 (fuso pelas regras do sistema, sem `zoneinfo`) | `0bcbcdf` |
+| 1 | Auxiliares de formulário em `salesos/formularios.py` (sem mudar comportamento) | `0cb3804` |
+| 2 | Dinheiro em centavos (`dinheiro.py`) | `3ab302b` |
+| 3 | Modelo e migração `0003` | `f8d7c0a` |
+| 4 | Serviço (R1–R10), schemas, período e R10 na anonimização | `1aac7cd` |
+| 5 | Rotas e telas do funil | `dbaaf76` |
+| 6 | Acessibilidade (Chromium) e ajustes da revisão geral | `d362785` |
+| 7 | Documentação | commit da Etapa 7 |
+
+| Critério de aceite | Resultado (Linux) |
+|---|---|
+| Ruff, formatação e mypy strict | Passou |
+| pytest | 426 passed, 1 skipped (teste só do Windows), 1 aviso conhecido |
+| Migração `0003`: upgrade, downgrade, upgrade de novo e `alembic check` (banco temporário) | Passou |
+| CHECKs no banco (motivo só na perda, fechamento, ganha com valor não nulo, valor inteiro) | Passou (SQL direto) |
+| R1–R10, P2 e histórico imutável | Passou (testes do serviço e das rotas) |
+| Período local → UTC, inclusive horário de verão de 2018–2019 | Passou no Linux (contra `zoneinfo`); **não verificado no Windows** |
+| CSRF, XSS, 303, 404/409, 422 no campo, GET sem efeito (banco inteiro) | Passou |
+| Interface: 15 telas × 4 larguras, contraste, foco, alvos de 44 px, sem rolagem horizontal nem erro de CSP | Passou no Chromium |
+| Windows | **Pendente**: checklist em `docs/setup.md` |
+
+**Mutações detectadas** (Etapas 2 a 5): 3 casas decimais, sinal, dígitos Unicode e sem teto no dinheiro; CHECK de valor ingênuo (`NULL > 0`) e sem `typeof`; motivo não exigido; ganhar sem valor; movimentação duplicada; final para final; filtro em UTC e com o offset de hoje; evento com o título; reabertura que apaga histórico; anonimização sem limpar observações ou detalhe; editar uma ganha sem valor. Um teste fraco de R10 foi encontrado por mutação e corrigido.
+
+**Revisões:** revisão de segurança independente (só leitura) em cada etapa de código e revisão geral da fase ("Ready to proceed"). Achados corrigidos: `reais()` sem tipo e teto (médio), valor fracionário aceito pelo SQLite (médio), zero à esquerda, inteiro sem limite no schema, id enorme no caminho → 500, teste de GET sem o dump completo, motivo trocado sem efeito, contagem "20" numa coluna cheia, alvos de toque de links soltos.
+
+**Riscos e pendências que continuam:**
+- **B1:** backups da `0002` são recusados depois da `0003`; precisa existir um procedimento testado de restaurar e migrar **antes de dados reais**.
+- **P1:** finalidade e prazo de retenção dos dados comerciais de clientes anonimizados (`docs/privacy.md`) bloqueiam dados reais.
+- Em `/clientes/{id}`, um id maior que o inteiro de 64 bits ainda gera erro 500 (pré-existente; fora do escopo da fase).
+- A checagem de estrutura do backup não compara o texto dos CHECKs (pré-existente, ADR 0005).
+- Fuso histórico no Windows não verificado (P3).
+
 ## Próximas
-Fase 03 — Oportunidades e funil: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`).
+Fase 04 — Tarefas e agenda: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`).
