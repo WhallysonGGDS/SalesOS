@@ -12,6 +12,7 @@
   - Backup de segurança verificado e o original preservado como `.pre-restore-<data>` antes da troca.
   - Recusa um backup que traria de volta dados de cliente anonimizado, salvo `--aceitar-reintroducao`.
 - **Recuperação** (`uv run salesos recover`): idempotente; decide olhando os arquivos reais. Antes de `verified`, volta o original e guarda o banco novo como `.failed-<data>`; depois de `verified`, mantém o restaurado. Nunca apaga.
+- O diário é conferido antes de qualquer movimentação (Fase 02.1, item E): carimbo no formato de `carimbo()`, estado conhecido, banco igual ao atual e caminhos de `staging` e `.pre-restore` iguais aos derivados do banco e do carimbo. Os caminhos usados são sempre os derivados, nunca os lidos. Diário ilegível ou adulterado → `recover` recusa sem mover nada e o diário fica pendente para análise manual.
 - O servidor não inicia com um diário pendente.
 
 **Invariantes:** em todo momento existe o original intacto (no lugar ou como `.pre-restore`) ou um backup de segurança verificado; toda mudança de estado vai para o disco antes da ação seguinte.

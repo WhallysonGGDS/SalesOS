@@ -13,6 +13,7 @@ troca; ele continua com o arquivo antigo, preservado como `.pre-restore-<ts>`.
 import json
 import logging
 import os
+import re
 import shutil
 import sqlite3
 import time
@@ -34,6 +35,8 @@ from salesos.lock import caminho_trava, trava
 logger = logging.getLogger(__name__)
 
 TENTATIVAS_EXTRAS = 5
+ESTADOS = ("validating", "quiesced", "safety_backed_up", "original_moved", "swapped", "verified")
+CARIMBO = re.compile(r"[0-9]{8}T[0-9]{12}Z")  # formato de `backup.carimbo()`
 FECHE_OS_PROGRAMAS = (
     "Feche os programas que usam o banco (servidor do SalesOS, DB Browser ou outros) "
     "e tente de novo. Nada foi alterado."
@@ -59,6 +62,51 @@ def controle_pendente(db: Path) -> Path | None:
     return controle if controle.exists() else None
 
 
+def _staging(db: Path, marca: str) -> Path:
+    return db.with_name(f"{db.name}.staging-{marca}")
+
+
+def _pre_restore(db: Path, marca: str) -> Path:
+    return db.with_name(f"{db.name}.pre-restore-{marca}")
+
+
+def _mesmo(valor: object, esperado: Path) -> bool:
+    return isinstance(valor, str) and Path(valor).resolve() == esperado.resolve()
+
+
+def _ler_diario(db: Path, controle: Path) -> dict[str, Any]:
+    """Confere o diário antes de mover qualquer arquivo.
+
+    Os caminhos usados depois são derivados do banco e do carimbo, nunca lidos do arquivo:
+    um diário adulterado não consegue apontar para nada fora da pasta do banco.
+    """
+    try:
+        dados = json.loads(controle.read_text(encoding="utf-8"))
+        marca = dados["carimbo"]
+        valido = (
+            isinstance(marca, str)
+            and CARIMBO.fullmatch(marca) is not None
+            and dados["estado"] in ESTADOS
+            and _mesmo(dados["banco"], db)
+            and _mesmo(dados["staging"], _staging(db, marca))
+            and _mesmo(dados["pre_restore"], _pre_restore(db, marca))
+            and isinstance(dados["seguranca"], str | None)
+        )
+    except (OSError, ValueError, TypeError, KeyError, RecursionError) as erro:
+        raise RuntimeError(_diario_invalido(controle)) from erro
+    if not valido:
+        raise RuntimeError(_diario_invalido(controle))
+    resultado: dict[str, Any] = dados
+    return resultado
+
+
+def _diario_invalido(controle: Path) -> str:
+    return (
+        f"Diário de restauração inválido: {controle}. Nenhum arquivo foi movido. "
+        "Confira a pasta do banco antes de mexer nesse arquivo."
+    )
+
+
 def _gravar_estado(controle: Path, dados: dict[str, Any], estado: str) -> None:
     dados["estado"] = estado
     temporario = controle.with_name(controle.name + ".tmp")
@@ -72,7 +120,7 @@ def _gravar_estado(controle: Path, dados: dict[str, Any], estado: str) -> None:
 def _arquivar(controle: Path, dados: dict[str, Any], resultado: str) -> None:
     """O diário nunca é apagado: vira um registro com o resultado no nome."""
     destino = controle.with_name(
-        f"{Path(dados['banco']).name}.restore-{dados['carimbo']}-{resultado}.json"
+        f"{controle.name.removesuffix('.restore.json')}.restore-{dados['carimbo']}-{resultado}.json"
     )
     os.replace(controle, destino)
     sincronizar(controle.parent)
@@ -162,10 +210,10 @@ def _checar_anonimizacao(db: Path, staging: Path, aceitar: bool) -> None:
 
 def _recuperar(db: Path, controle: Path) -> str:
     """Leva qualquer estado inacabado a um fim seguro, olhando os arquivos reais."""
-    dados: dict[str, Any] = json.loads(controle.read_text(encoding="utf-8"))
+    dados = _ler_diario(db, controle)
     estado = str(dados["estado"])
-    staging, pre = Path(dados["staging"]), Path(dados["pre_restore"])
-    if estado in ("verified", "done"):
+    staging, pre = _staging(db, dados["carimbo"]), _pre_restore(db, dados["carimbo"])
+    if estado == "verified":
         _arquivar(controle, dados, "done")
         return estado
     if pre.exists():
@@ -197,8 +245,7 @@ def restaurar(
         if not db.exists():
             raise RestauracaoRecusada(f"Banco atual não encontrado: {db}")
         marca = carimbo()
-        staging = db.with_name(f"{db.name}.staging-{marca}")
-        pre = db.with_name(f"{db.name}.pre-restore-{marca}")
+        staging, pre = _staging(db, marca), _pre_restore(db, marca)
         dados: dict[str, Any] = {
             "carimbo": marca,
             "banco": str(db),

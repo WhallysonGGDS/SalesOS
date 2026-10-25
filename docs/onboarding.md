@@ -54,6 +54,8 @@ uv run salesos recover
 
 O comando termina com segurança: antes da troca concluída, volta o banco anterior (o novo fica guardado como `.failed-<data>`); depois, mantém o restaurado. Pode ser rodado mais de uma vez. Ele nunca apaga arquivos e avisa se houver sobras temporárias de backup.
 
+Se o comando responder "Diário de restauração inválido", o registro pendente foi corrompido ou alterado: nada foi movido. Não apague o arquivo `data\salesos.db.restore.json` sem antes conferir a pasta `data\` (o banco atual e as cópias `.pre-restore-*`).
+
 ## Verificar a instalação
 
 ```
