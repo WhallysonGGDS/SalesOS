@@ -26,7 +26,7 @@ apresente o plano com skills escolhidas, critérios de aceite e comandos de veri
 | Verificar | Rodar a verificação completa e mostrar a saída real | `superpowers:verification-before-completion` |
 | Revisar | Diff exato + chamadores e testes afetados; achados com severidade e evidência | `superpowers:requesting-code-review`; prompt 03 para revisões amplas |
 | Registrar | Atualizar o documento responsável, decisões (ADR) e limitações | `AGENTS.md`, seção Continuidade |
-| Aprovar | Parar e pedir aprovação no fim da fase, ou antes de commit/push | Política do projeto |
+| Aprovar | Pedir aprovação do plano antes de começar; commit e push de cada etapa validada são automáticos dentro do escopo autorizado (`AGENTS.md`, "Git: commit e push por etapa") | Política do projeto |
 
 ## 3. Consultar a documentação do Toolkit
 

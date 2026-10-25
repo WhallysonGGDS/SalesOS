@@ -25,7 +25,7 @@ Nada foi instalado em escopo global. A configuração de plugins é declarativa:
 
 **Passos:**
 
-1. Atualize a pasta local do SalesOS com o conteúdo deste branch. O commit e o push dependem da sua autorização: ver o relatório da integração.
+1. Atualize a pasta local do SalesOS com o conteúdo deste branch. Commit e push seguem a política de `AGENTS.md` ("Git: commit e push por etapa").
 2. No PowerShell, dentro da pasta: `claude`.
 3. Aceite a confiança da pasta e a instalação dos marketplaces e plugins do projeto.
 4. Na sessão, execute `/plugin` e confirme os três plugins habilitados.

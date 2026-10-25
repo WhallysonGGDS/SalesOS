@@ -4,14 +4,16 @@
     "**/tooling/vibe-coding-toolkit/**/CLAUDE.md"
   ],
   "permissions": {
-    "ask": [
+    "allow": [
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push -u origin claude/practical-bell-w2zwqp)",
+      "Bash(git push origin claude/practical-bell-w2zwqp)"
     ],
     "deny": [
       "Bash(git reset --hard:*)",
       "Bash(git clean:*)",
       "Bash(git push --force:*)",
+      "Bash(git push --force-with-lease:*)",
       "Bash(git push -f:*)",
       "Read(./.env)",
       "Read(./.env.local)",

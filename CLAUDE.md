@@ -9,8 +9,8 @@
 
 O `.claude/settings.json` declara:
 
-- `ask` para comandos Bash que começam com `git commit` ou `git push`;
-- `deny` para comandos Bash que começam com `git reset --hard`, `git clean`, `git push --force` ou `git push -f`;
+- `allow` para `git commit` e para o push da branch de trabalho autorizada (`git push origin claude/practical-bell-w2zwqp`, com ou sem `-u`), conforme a política de commit e push por etapa do `AGENTS.md`; push para qualquer outra branch continua pedindo confirmação;
+- `deny` para comandos Bash que começam com `git reset --hard`, `git clean`, `git push --force`, `git push --force-with-lease` ou `git push -f`;
 - `deny` para a ferramenta de leitura de arquivos em `.env`, `.env.local` e `data/**`.
 
 Essas regras reduzem o risco de erro, mas **não são uma barreira completa**:
@@ -21,6 +21,6 @@ Essas regras reduzem o risco de erro, mas **não são uma barreira completa**:
 
 Por isso, a obrigação continua sendo a política, independentemente de qualquer bloqueio técnico:
 
-- **Commit, push e PR exigem autorização explícita do usuário, a cada vez.** Nunca contorne uma regra de permissão nem procure outra forma de fazer uma operação que ela restringe.
+- **Commit e push seguem a seção "Git: commit e push por etapa" do `AGENTS.md`:** automáticos para as etapas de um escopo autorizado, depois de todos os critérios de qualidade e segurança; PR, merge e publicação exigem autorização explícita a cada vez. Ao mudar a branch de trabalho autorizada, atualize a regra `allow` acima. Nunca contorne uma regra de permissão nem procure outra forma de fazer uma operação que ela restringe.
 - Não execute comandos destrutivos (`reset --hard`, `clean`, push forçado, exclusões em massa) sem uma decisão do usuário.
 - Não leia nem exiba segredos (`.env*`, exceto `.env.example`) nem dados reais em `data/`, por nenhum meio.
