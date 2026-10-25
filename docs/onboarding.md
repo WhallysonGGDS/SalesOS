@@ -31,6 +31,7 @@ uv run salesos backup
 - Cria `data\backups\salesos-<data>.db` e o manifesto `.db.json` (SHA-256, revisão), depois de conferir a integridade.
 - Nada é apagado automaticamente: os backups se acumulam e contêm dados pessoais. Guarde uma cópia fora do computador (pendrive criptografado, por exemplo) e veja a limpeza em `docs/privacy.md`.
 - Para mudar a pasta: `SALESOS_BACKUP_DIR` no `.env`.
+- Se aparecer "bloqueado por outro programa", algum programa (por exemplo, o DB Browser no meio de uma alteração) está segurando o banco: feche-o e rode de novo.
 
 ## Restaurar um backup
 
@@ -41,6 +42,7 @@ uv run salesos backup
 A restauração **recusa** (sem alterar nada) quando:
 
 - o servidor do SalesOS ou outro programa está usando o banco;
+- o banco atual não pode ser lido (por exemplo, não foi migrado): a mensagem mostra o erro do SQLite, e o caminho é rodar `uv run alembic upgrade head` antes;
 - o backup está corrompido, sem manifesto, com SHA-256 diferente, de outra versão do esquema ou com estrutura inesperada;
 - o backup traria de volta dados de um cliente anonimizado depois dele. Se for isso mesmo, repita com `--aceitar-reintroducao`.
 

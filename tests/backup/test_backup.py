@@ -187,3 +187,49 @@ def test_object_hidden_behind_internal_name_is_refused(tmp_path: Path, pasta_bac
     arquivo.with_name(arquivo.name + ".json").write_text(json.dumps(manifesto), encoding="utf-8")
     with pytest.raises(BackupInvalido):
         verificar_backup(arquivo)
+
+
+def test_backup_gives_up_with_clear_message_when_database_is_locked_exclusively(
+    tmp_path: Path, pasta_backups: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sem prazo, o laço de `Connection.backup` repetiria o passo bloqueado para sempre."""
+    db = criar_banco(tmp_path / "salesos.db", "Atual")
+    monkeypatch.setattr(backup, "ESPERA_BLOQUEIO", 0.2)
+    dono = sqlite3.connect(db, isolation_level=None)
+    dono.execute("PRAGMA locking_mode=EXCLUSIVE")
+    dono.execute("BEGIN EXCLUSIVE")
+    try:
+        with pytest.raises(backup.BancoEmUso, match="bloqueado por outro programa"):
+            criar_backup(db, pasta_backups)
+    finally:
+        dono.rollback()
+        dono.close()
+    assert list(pasta_backups.iterdir()) == []  # nenhum temporário nem backup parcial
+
+
+def _erro_sqlite(codigo: int) -> sqlite3.OperationalError:
+    erro = sqlite3.OperationalError("simulado")
+    erro.sqlite_errorcode = codigo
+    return erro
+
+
+@pytest.mark.parametrize(
+    ("codigo", "esperado"),
+    [
+        pytest.param(5, True, id="SQLITE_BUSY"),
+        pytest.param(6, True, id="SQLITE_LOCKED"),
+        pytest.param(517, True, id="SQLITE_BUSY_SNAPSHOT"),
+        pytest.param(262, True, id="SQLITE_LOCKED_SHAREDCACHE"),
+        pytest.param(1, False, id="SQLITE_ERROR"),
+        pytest.param(8, False, id="SQLITE_READONLY"),
+        pytest.param(10, False, id="SQLITE_IOERR"),
+        pytest.param(14, False, id="SQLITE_CANTOPEN"),
+        pytest.param(13, False, id="SQLITE_FULL"),
+    ],
+)
+def test_locked_is_told_apart_from_other_sqlite_errors(codigo: int, esperado: bool) -> None:
+    assert backup.bloqueado(_erro_sqlite(codigo)) is esperado
+
+
+def test_error_without_sqlite_code_is_not_a_lock() -> None:
+    assert backup.bloqueado(sqlite3.OperationalError("sem código")) is False

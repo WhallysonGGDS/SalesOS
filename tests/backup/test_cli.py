@@ -1,5 +1,6 @@
 """Ponto de entrada `salesos`: servidor, backup, restore e recover (banco temporário)."""
 
+import sqlite3
 import sys
 from pathlib import Path
 from typing import Any
@@ -92,3 +93,18 @@ def test_backup_of_missing_database_exits_cleanly(
         _rodar(monkeypatch, "backup")
     assert not (tmp_path / "backups").exists()
     assert not (tmp_path / "nao-existe.db").exists()
+
+
+def test_backup_command_reports_locked_database_instead_of_hanging(
+    db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("salesos.backup.ESPERA_BLOQUEIO", 0.2)
+    dono = sqlite3.connect(db, isolation_level=None)
+    dono.execute("PRAGMA locking_mode=EXCLUSIVE")
+    dono.execute("BEGIN EXCLUSIVE")
+    try:
+        with pytest.raises(SystemExit, match="bloqueado por outro programa"):
+            _rodar(monkeypatch, "backup")
+    finally:
+        dono.rollback()
+        dono.close()

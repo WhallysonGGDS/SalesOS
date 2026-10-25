@@ -110,3 +110,37 @@ def test_pending_control_blocks_new_restore(
     monkeypatch.undo()
     with pytest.raises(RestauracaoRecusada, match="recover"):
         restaurar(db, arquivo, pasta_backups)
+
+
+def test_current_database_without_tables_is_not_reported_as_in_use(
+    tmp_path: Path, pasta_backups: Path
+) -> None:
+    """Banco atual não migrado: a mensagem não pode mandar fechar programas."""
+    origem = criar_banco(tmp_path / "origem" / "salesos.db", "Do backup")
+    arquivo = criar_backup(origem, pasta_backups)
+    db = tmp_path / "dados" / "salesos.db"
+    db.parent.mkdir()
+    conn = sqlite3.connect(db)
+    conn.execute("PRAGMA journal_mode=WAL")  # como o banco da aplicação
+    conn.execute("CREATE TABLE outra (x)")
+    conn.close()
+    antes = sha(db)
+    with pytest.raises(RestauracaoRecusada) as erro:
+        restaurar(db, arquivo, pasta_backups)
+    assert "Feche os programas" not in str(erro.value)
+    assert "no such table: clientes" in str(erro.value)
+    assert "Nada foi alterado" in str(erro.value)
+    assert sha(db) == antes
+    assert controle_pendente(db) is None
+
+
+@pytest.mark.parametrize(
+    ("codigo", "trecho"),
+    [(5, "Feche os programas"), (6, "Feche os programas"), (10, "SQLITE_IOERR")],
+    ids=["busy", "locked", "ioerr"],
+)
+def test_refusal_message_depends_on_the_sqlite_error(codigo: int, trecho: str) -> None:
+    erro = sqlite3.OperationalError("simulado")
+    erro.sqlite_errorcode = codigo
+    erro.sqlite_errorname = {5: "SQLITE_BUSY", 6: "SQLITE_LOCKED", 10: "SQLITE_IOERR"}[codigo]
+    assert trecho in str(restore._recusa(erro))

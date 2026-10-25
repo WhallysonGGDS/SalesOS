@@ -24,6 +24,7 @@ from typing import Any
 from salesos.backup import (
     BackupInvalido,
     abrir_leitura,
+    bloqueado,
     carimbo,
     criar_backup,
     sincronizar,
@@ -51,6 +52,16 @@ class RestauracaoRecusada(RuntimeError):
 class Recuperacao:
     estado: str | None
     residuos: list[Path]
+
+
+def _recusa(erro: sqlite3.OperationalError) -> RestauracaoRecusada:
+    """Só bloqueio vira "feche os programas"; o resto mostra o erro real do SQLite."""
+    if bloqueado(erro):
+        return RestauracaoRecusada(FECHE_OS_PROGRAMAS)
+    nome = getattr(erro, "sqlite_errorname", "erro do SQLite")
+    return RestauracaoRecusada(
+        f"Não foi possível usar o banco atual ({nome}: {erro}). Nada foi alterado."
+    )
 
 
 def caminho_controle(db: Path) -> Path:
@@ -162,7 +173,7 @@ def _aquietar(db: Path) -> None:
         finally:
             conn.close()
     except sqlite3.OperationalError as erro:
-        raise RestauracaoRecusada(FECHE_OS_PROGRAMAS) from erro
+        raise _recusa(erro) from erro
     restos = [p for p in (Path(f"{db}-wal"), Path(f"{db}-shm")) if p.exists()]
     if modo != "delete" or restos:
         raise RestauracaoRecusada(FECHE_OS_PROGRAMAS)
@@ -198,8 +209,8 @@ def _checar_anonimizacao(db: Path, staging: Path, aceitar: bool) -> None:
     try:
         atual = sqlite3.connect(f"{db.resolve().as_uri()}?mode=rw", uri=True, timeout=0)
         anonimizados_agora = _ids(atual, anonimizados=True)
-    except sqlite3.OperationalError as erro:  # outro programa segura o banco
-        raise RestauracaoRecusada(FECHE_OS_PROGRAMAS) from erro
+    except sqlite3.OperationalError as erro:
+        raise _recusa(erro) from erro
     reintroduzidos = anonimizados_agora & _ids(abrir_leitura(staging), anonimizados=False)
     if reintroduzidos and not aceitar:
         raise RestauracaoRecusada(

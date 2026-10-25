@@ -6,9 +6,11 @@
 
 **Decisão:**
 - **Backup** (`uv run salesos backup`): API de backup do SQLite (cópia consistente mesmo com o servidor ligado), arquivo em modo DELETE, `integrity_check`, SHA-256 e revisão do esquema num manifesto `.db.json` sem dados pessoais. Nunca sobrescreve e nunca apaga (D7). Falha no meio não deixa arquivos parciais.
+  - Se outro programa segurar o banco com bloqueio exclusivo, o backup desiste depois de `ESPERA_BLOQUEIO` (10 s; até cerca de 15 s somando a espera da conexão) com a mensagem "bloqueado por outro programa" (Fase 02.1, item D). Sem esse prazo, `Connection.backup` do Python repetiria a tentativa para sempre.
 - **Verificação de um backup antes de restaurar:** manifesto presente, SHA-256 igual, `integrity_check` ok, revisão igual ao head e **estrutura igual** à do head (tabelas, colunas, índices, views e triggers), obtida rodando as migrações reais num banco temporário. Arquivos externos são abertos com `trusted_schema=OFF`.
 - **Restauração** (`uv run salesos restore <arquivo>`): trava cooperativa (`data/salesos.lock`, `flock` no Linux, `msvcrt` no Windows) que o servidor também segura; diário de estados `salesos.db.restore.json` gravado e sincronizado antes de cada passo: `validating` → `quiesced` → `safety_backed_up` → `original_moved` → `swapped` → `verified`.
   - O banco é "aquietado" sem esperar: `BEGIN IMMEDIATE` (escritores), checkpoint completo (leitores) e saída do WAL (falha com qualquer conexão aberta, inclusive ociosa). Qualquer sinal de uso recusa antes de mudar algo.
+  - Só `SQLITE_BUSY`/`SQLITE_LOCKED` (e os códigos estendidos) viram "Feche os programas". Outro erro do SQLite (banco não migrado, erro de disco, permissão) é mostrado com o nome do erro real, também sem alterar nada (Fase 02.1, item D). A regra fica em `backup.bloqueado()`.
   - Backup de segurança verificado e o original preservado como `.pre-restore-<data>` antes da troca.
   - Recusa um backup que traria de volta dados de cliente anonimizado, salvo `--aceitar-reintroducao`.
 - **Recuperação** (`uv run salesos recover`): idempotente; decide olhando os arquivos reais. Antes de `verified`, volta o original e guarda o banco novo como `.failed-<data>`; depois de `verified`, mantém o restaurado. Nunca apaga.

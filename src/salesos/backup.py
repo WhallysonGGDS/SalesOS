@@ -12,6 +12,7 @@ import os
 import sqlite3
 import sys
 import tempfile
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -25,8 +26,25 @@ from salesos.db import restringir
 MIGRATIONS = Path(__file__).resolve().parents[2] / "migrations"
 
 
+ESPERA_BLOQUEIO = 10.0  # segundos que o backup espera outro programa liberar o banco
+
+
 class BackupInvalido(ValueError):
     pass
+
+
+class BancoEmUso(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__(
+            "O banco está bloqueado por outro programa (DB Browser ou outro). "
+            "Feche-o e tente de novo. Nada foi alterado."
+        )
+
+
+def bloqueado(erro: sqlite3.Error) -> bool:
+    """SQLITE_BUSY ou SQLITE_LOCKED, inclusive os códigos estendidos (byte baixo)."""
+    codigo = getattr(erro, "sqlite_errorcode", None)
+    return codigo is not None and codigo & 0xFF in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
 
 
 def carimbo() -> str:
@@ -130,8 +148,20 @@ def _copiar_sqlite(origem: Path, destino: Path) -> None:
     # mode=rw: se o banco não existir, falha em vez de criar um arquivo vazio no lugar.
     fonte = sqlite3.connect(f"{origem.resolve().as_uri()}?mode=rw", uri=True)
     alvo = sqlite3.connect(destino)
+    prazo = time.monotonic() + ESPERA_BLOQUEIO
+
+    def desistir_se_preso(status: int, _restantes: int, _total: int) -> None:
+        # Sem isso, `Connection.backup` repete o passo bloqueado para sempre.
+        if status in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED) and time.monotonic() > prazo:
+            raise BancoEmUso
+
     try:
-        fonte.backup(alvo)
+        try:
+            fonte.backup(alvo, progress=desistir_se_preso)
+        except sqlite3.OperationalError as erro:
+            if bloqueado(erro):
+                raise BancoEmUso from erro
+            raise
         # Modo DELETE: o arquivo fica completo sozinho, sem `-wal`, e o hash não muda ao abrir.
         alvo.execute("PRAGMA journal_mode=DELETE")
     finally:
