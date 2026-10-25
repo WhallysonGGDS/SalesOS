@@ -22,6 +22,7 @@ from tests.backup.conftest import (
     sha,
     sobras,
 )
+from tests.conftest import migrar
 
 
 def test_restore_swaps_database_and_keeps_every_copy(
@@ -144,3 +145,18 @@ def test_refusal_message_depends_on_the_sqlite_error(codigo: int, trecho: str) -
     erro.sqlite_errorcode = codigo
     erro.sqlite_errorname = {5: "SQLITE_BUSY", 6: "SQLITE_LOCKED", 10: "SQLITE_IOERR"}[codigo]
     assert trecho in str(restore._recusa(erro))
+
+
+def test_backup_from_revision_0002_is_refused_after_0003(
+    tmp_path: Path, pasta_backups: Path
+) -> None:
+    """B1: sem procedimento de migração, um backup de revisão anterior é recusado intacto."""
+    antigo = tmp_path / "antigo" / "salesos.db"
+    migrar(antigo, "0002")
+    arquivo = criar_backup(antigo, pasta_backups)
+    db = criar_banco(tmp_path / "dados" / "salesos.db", "Atual")
+    antes = sha(db)
+    with pytest.raises(RestauracaoRecusada, match="revisão do esquema 0002 difere da atual 0003"):
+        restaurar(db, arquivo, pasta_backups)
+    assert sha(db) == antes
+    assert_original_intacto(db)

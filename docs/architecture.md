@@ -26,9 +26,12 @@ src/salesos/
     schemas.py    Entrada validada (Pydantic, extra="forbid")
     service.py    Regras: CRUD, busca, eventos, anonimização (uma unidade de trabalho por função)
     router.py     Rotas finas e páginas de erro sem dados pessoais
+  features/oportunidades/  (Fase 03, em construção)
+    models.py     Oportunidade e Movimentacao; CHECKs de etapa, motivo, fechamento e valor
   web/templates base.html, index.html, clientes/*.html (Jinja2, sem JavaScript)
   web/static    app.css
-migrations/     Alembic; 0001 = linha de base vazia; 0002 = clientes, contatos, interações
+migrations/     Alembic; 0001 = linha de base vazia; 0002 = clientes, contatos, interações;
+                0003 = oportunidades e movimentações (Fase 03)
 tests/          pytest; cada teste roda numa pasta temporária, sem .env real e sem data/
 ```
 
@@ -47,6 +50,7 @@ Rotas: `GET /`, `GET /health`, `GET /clientes` (busca, arquivados, paginação d
 - SQLite em `data/salesos.db` (fora do Git). A pasta é criada quando o engine é criado; se o SalesOS a cria, ela fica `0700` (POSIX).
 - Em toda conexão: permissão `0600` do arquivo (POSIX), `foreign_keys=ON`, `journal_mode=WAL`, `busy_timeout=5000`, `secure_delete=ON`. Erros do SQLAlchemy não levam os valores dos parâmetros (`hide_parameters`).
 - Tabelas da Fase 02: ver ADR `0004-modelo-clientes.md`.
+- Tabelas da Fase 03 (`oportunidades`, `movimentacoes`): ver ADR `0006-funil.md`. Depois da `0003`, backups da `0002` são recusados pelo `restore` (bloqueio B1 antes de dados reais).
 - Alembic com `render_as_batch=True` (SQLite não altera colunas em lugar). Durante a migração, a FK fica **desligada** naquela conexão (`foreign_keys_disabled`), porque o batch recria tabelas e, com FK ligada, o `DROP` apagaria linhas filhas em cascata. Antes do commit, `PRAGMA foreign_key_check` precisa estar vazio; se não estiver, a migração inteira é desfeita (`transactional_ddl=True`). Migrações nunca rodam no import nem em requisições: `uv run alembic upgrade head`.
 - Cada migração gerada passa automaticamente por `ruff check --fix` e `ruff format` (`post_write_hooks` do `alembic.ini`).
 

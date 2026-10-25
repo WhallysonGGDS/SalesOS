@@ -10,6 +10,7 @@ from salesos.db import (
     foreign_keys_disabled,
 )
 from salesos.features.clientes import models as _clientes_models  # noqa: F401  (registra as tabelas)
+from salesos.features.oportunidades import models as _oportunidades_models  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

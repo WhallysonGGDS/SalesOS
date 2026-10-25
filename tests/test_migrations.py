@@ -26,7 +26,7 @@ def test_upgrade_check_and_downgrade(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0002"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0003"
 
     # Sem diferenças entre os modelos e o banco migrado (levanta exceção se houver).
     command.check(config)
@@ -100,3 +100,38 @@ def test_0002_downgrade_to_0001_removes_only_phase_02_tables(tmp_path: Path) -> 
         assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0001"
     engine.dispose()
     command.upgrade(config, "head")
+
+
+def test_0003_downgrade_keeps_phase_02_data_and_upgrades_again(tmp_path: Path) -> None:
+    """upgrade → downgrade → upgrade da 0003, só em banco temporário, sem perder clientes."""
+    db_url = f"sqlite:///{tmp_path / 'fase03.db'}"
+    config = _alembic_config(db_url)
+    engine = create_db_engine(db_url)
+    command.upgrade(config, "0002")
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO clientes (tipo, nome, origem) "
+                "VALUES ('PJ', 'Cliente Ficticio', 'site')"
+            )
+        )
+    command.upgrade(config, "head")
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO oportunidades (cliente_id, titulo, etapa) "
+                "VALUES (1, 'Projeto ficticio', 'novo_lead')"
+            )
+        )
+    command.downgrade(config, "0002")
+    with engine.connect() as conn:
+        tabelas = set(inspect(conn).get_table_names())
+        assert "oportunidades" not in tabelas and "movimentacoes" not in tabelas
+        assert {"clientes", "contatos", "interacoes"} <= tabelas
+        assert conn.execute(text("SELECT nome FROM clientes")).scalar_one() == "Cliente Ficticio"
+    command.upgrade(config, "head")
+    command.check(config)
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM oportunidades")).scalar_one() == 0
+        assert conn.execute(text("SELECT count(*) FROM clientes")).scalar_one() == 1
+    engine.dispose()
