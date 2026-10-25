@@ -16,6 +16,8 @@ src/salesos/
   backup.py     Backup verificado e verificação de um backup (integridade, SHA-256,
                 revisão, estrutura)
   restore.py    Restauração com diário de estados e recover
+  formularios.py  Auxiliares das rotas HTML: campos permitidos, validação com mensagens
+                por campo, 303 e datas locais (compartilhado pelas features)
   lock.py       Trava cooperativa entre processos (flock no Linux, msvcrt no Windows)
   features/clientes/
     models.py     Cliente, Contato, Interacao
