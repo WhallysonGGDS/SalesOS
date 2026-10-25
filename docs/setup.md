@@ -71,6 +71,8 @@ Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/User
 9. Conferir que a pasta do projeto está dentro do seu usuário e que outras contas do Windows não têm acesso a `data\` (Propriedades → Segurança).
 10. Interface: seletor de data em pt-BR, hora local correta na linha do tempo, navegação por teclado, Narrador ou NVDA nas telas de cliente.
 11. Nenhum `.tmp`, `.staging-` ou `salesos.db.restore.json` sobrando ao final.
+12. (Fase 02.1) Banco aberto no DB Browser **com uma alteração não gravada** (que segura o arquivo): `uv run salesos backup` termina em até cerca de 15 s com "bloqueado por outro programa", sem criar arquivo em `backups\`. Desfaça a alteração no DB Browser ao terminar.
+13. (Fase 02.1) Com o servidor desligado, crie um `salesos.db.restore.json` de teste com o conteúdo `{"estado":"quiesced"}` na pasta do banco de teste: `uv run salesos recover` responde "Diário de restauração inválido" sem mover nada. Apague esse arquivo de teste depois.
 
 Só depois disso, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
 
