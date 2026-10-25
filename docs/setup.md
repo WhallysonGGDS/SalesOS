@@ -34,6 +34,14 @@ Toolkit: Vibe Coding Toolkit, revisão `790a895` (detalhes em `docs/toolkit/`).
 | Cada commit da fase testado num worktree isolado | E0: 46 passed; E1: 67; E2–E6: 210 (+1 skipped); E7: 214; A: 217; B: 225; C: 230 |
 | CLI real (bancos no scratchpad): backup com servidor ligado; restore e recover recusados com o servidor ligado; restore com servidor desligado; backup forjado com view recusado | Passou |
 | Permissões com umask 022 (banco do `alembic upgrade`, backup e manifesto) | `0600`; pasta de backups `0700` |
+
+## Evidências da Fase 02.1 (Cloud, Linux, 2026-10-25)
+
+| Verificação | Resultado |
+|---|---|
+| Ruff, formatação e mypy strict | Sem erros |
+| `uv run pytest` | 270 passed, 1 skipped (teste só do Windows), 1 aviso conhecido |
+| CLI real (banco fictício no scratchpad): `alembic upgrade`, `backup`, `restore`, `recover`; `recover` com diário adulterado | Passou; diário adulterado recusado com mensagem, sem mover arquivos |
 | Servidor real: busca com valor-sentinela fora do log; `Cache-Control: no-store` | Passou |
 | Chromium: 7 telas × 320/390/768/1440 px; contraste de texto e bordas; foco em todas as paradas (inclui `datetime-local`); link "Ir para o conteúdo"; sem rolagem horizontal, erros de console ou CSP | Passou |
 | Dados usados | Só fictícios, em bancos temporários; `data/` nunca foi aberto |
@@ -52,7 +60,7 @@ Fase 01:
 
 Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/Users/<você>/AppData/Local/Temp/salesos-teste/salesos.db` e `SALESOS_BACKUP_DIR` numa pasta de teste, com dados fictícios. Ao terminar, remova essas linhas do `.env`.
 
-1. `uv run pytest`: resultado `227 passed, 4 skipped, 1 warning`. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
+1. `uv run pytest`: resultado `267 passed, 4 skipped, 1 warning`. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
 2. Com o servidor ligado, `uv run salesos backup` cria o backup e o `.db.json`.
 3. Com o servidor ligado, `uv run salesos restore <backup>` é recusado ("Outro processo do SalesOS…").
 4. Servidor desligado e o banco aberto no DB Browser: o restore é recusado ("Feche os programas…") sem alterar nada.

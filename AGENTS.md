@@ -6,8 +6,15 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
 
 ## Estado atual
 
-- **Implementado:** fundação técnica (Fase 01) e clientes, contatos, interações, anonimização, backup e restauração (Fase 02). Detalhes em `docs/architecture.md` e `docs/phases.md`.
-- **Pendente:** validação no Windows (checklist em `docs/setup.md`); CPF, CNPJ e telefone (sem fonte oficial aprovada); propostas D–G da revisão da Fase 02.
+- **Implementado:** fundação técnica (Fase 01); clientes, contatos, interações, anonimização, backup e restauração (Fase 02); hardening D, E e S2 (Fase 02.1). Detalhes em `docs/architecture.md` e `docs/phases.md`.
+- **Pendente:**
+  - validação no Windows (checklist em `docs/setup.md`), sem a qual dados reais não podem ser usados;
+  - CPF, CNPJ e telefone (sem fonte oficial aprovada);
+  - propostas F (paginação da linha do tempo) e G (páginas HTML para erros 403/413/422);
+  - atualização do `certifi` no `uv.lock` (aviso do pip-audit, só desenvolvimento; exige autorização);
+  - `alembic upgrade` e servidor iniciado fora do `salesos` não pegam a trava;
+  - leitor de tela e zoom real do navegador não testados;
+  - Fases 03 a 08 (funil, tarefas, serviços/propostas/contratos/assinaturas, dashboard e relatórios, segurança e expansão, validação integral).
 - **Próxima etapa:** Fase 03 (oportunidades e funil), que só começa com aprovação explícita do usuário.
 - **Stack:** Python 3.15.0, uv, FastAPI, SQLAlchemy 2.1, Alembic, SQLite, Pydantic Settings, Jinja2, pytest + HTTPX, Ruff e mypy (ADR `docs/decisions/0001-stack-e-python.md`).
 

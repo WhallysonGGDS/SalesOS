@@ -6,14 +6,14 @@
 | `uv run ruff check .` | Lint (pyflakes, pycodestyle, isort, bugbear, pyupgrade, bandit `S`, simplify, ruff) |
 | `uv run ruff format --check .` | Formatação. `tooling/` fica excluído (cópia preservada do Toolkit) |
 | `uv run mypy` | Tipos em modo `strict` em `src`, `tests` e `migrations` |
-| `uv run pytest` | 231 testes (lista por área abaixo) |
+| `uv run pytest` | 271 testes (lista por área abaixo) |
 
 ## Resultado esperado do pytest
 
 | Sistema | Resultado normal |
 |---|---|
-| Linux (verificado no Cloud) | `230 passed, 1 skipped, 1 warning` |
-| Windows (**ainda não executado**) | `227 passed, 4 skipped, 1 warning` |
+| Linux (verificado no Cloud) | `270 passed, 1 skipped, 1 warning` |
+| Windows (**ainda não executado**) | `267 passed, 4 skipped, 1 warning` |
 
 - **Skipped no Linux (1):** o teste que prova que o Windows recusa trocar o banco enquanto outro processo o mantém aberto. Só faz sentido no Windows.
 - **Skipped no Windows (4):** os testes de permissões POSIX (`0600`/`0700`), que não se aplicam ao Windows.
@@ -37,11 +37,11 @@ StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprec
 |---|---|---|---|
 | Configuração | `test_config.py` | 13 | padrões locais, host só loopback, segredo forte, hosts não alteráveis por ambiente |
 | Banco e migrações | `test_db.py`, `test_migrations.py`, `clientes/test_schema.py` | 31 | PRAGMAs (FK, WAL, `secure_delete`), migração em batch sem perder filhos, `upgrade`/`downgrade`/`alembic check`, CHECKs, UNIQUEs, FKs, ausência de telefone, erros sem valores |
-| Aplicação e segurança HTTP | `test_app.py`, `test_security.py` | 26 | hosts, cabeçalhos (CSP, `no-store`), cookie e token CSRF, sessão por requisição fechada |
+| Aplicação e segurança HTTP | `test_app.py`, `test_security.py` | 30 | hosts, cabeçalhos (CSP, `no-store`), cookie e token CSRF, sessão por requisição fechada, limite de 256 KiB do corpo (com e sem `Content-Length`, desconexão no meio) |
 | Normalização e validação | `clientes/test_normalize.py`, `clientes/test_schemas.py` | 36 | e-mail, busca sem acento, escape de `LIKE`, campos bloqueados (`documento`, `telefone`) recusados, datas em UTC |
 | Serviço e privacidade | `clientes/test_service.py`, `clientes/test_privacy.py` | 23 | duplicados, eventos só com nomes de campos, interações só de acréscimo, anonimização (inclusive bytes do `.db` e `-wal`), logs sem dados pessoais |
-| Rotas e interface | `clientes/test_routes.py`, `clientes/test_ui.py` | 39 | CSRF em todas as rotas POST, GET sem efeito colateral, XSS escapado, 303, 404/409 sem dados pessoais, rótulos, foco semântico, estados vazios |
-| Backup, restauração e trava | `backup/test_*.py` | 63 | integridade, SHA-256, revisão e estrutura do backup; restauração com falha e queda em cada estado; `recover` idempotente; conexões concorrentes; disco cheio; trava entre processos; permissões; CLI |
+| Rotas e interface | `clientes/test_routes.py`, `clientes/test_ui.py` | 40 | CSRF em todas as rotas POST, maior formulário legítimo dentro do limite do corpo, GET sem efeito colateral, XSS escapado, 303, 404/409 sem dados pessoais, rótulos, foco semântico, estados vazios |
+| Backup, restauração e trava | `backup/test_*.py` | 98 | integridade, SHA-256, revisão e estrutura do backup; backup desiste com banco bloqueado; bloqueio separado de outros erros do SQLite; restauração com falha e queda em cada estado; `recover` idempotente e recusa de diário adulterado (caminhos, carimbo, JSON); conexões concorrentes; disco cheio; trava entre processos; permissões; CLI |
 
 Mutações (alterar o código de propósito para ver o teste falhar) foram usadas nas proteções de privacidade, segurança, backup e restauração; os resultados estão em `docs/phases.md`.
 

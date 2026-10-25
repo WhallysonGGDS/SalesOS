@@ -64,4 +64,4 @@ Se o comando responder "Diário de restauração inválido", o registro pendente
 uv run ruff check . ; uv run ruff format --check . ; uv run mypy ; uv run pytest
 ```
 
-No Windows, o resultado esperado do pytest é `227 passed, 4 skipped, 1 warning`: os 4 testes de permissões POSIX não se aplicam ao Windows e o teste exclusivo do Windows (troca recusada com o arquivo aberto) precisa **rodar e passar**. Detalhes em `docs/quality.md`.
+No Windows, o resultado esperado do pytest é `267 passed, 4 skipped, 1 warning`: os 4 testes de permissões POSIX não se aplicam ao Windows e o teste exclusivo do Windows (troca recusada com o arquivo aberto) precisa **rodar e passar**. Detalhes em `docs/quality.md`.
