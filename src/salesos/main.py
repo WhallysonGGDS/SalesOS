@@ -20,7 +20,7 @@ from salesos.db import create_db_engine, sqlite_file
 from salesos.features.clientes import router as clientes
 from salesos.lock import Travado, caminho_trava, trava
 from salesos.restore import RestauracaoRecusada, controle_pendente, recuperar, restaurar
-from salesos.security import form_token, require_csrf, security_middleware
+from salesos.security import LimiteCorpo, form_token, require_csrf, security_middleware
 
 WEB_DIR = Path(__file__).parent / "web"
 
@@ -53,6 +53,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
     clientes.configurar(app)
     app.middleware("http")(security_middleware)
+    # Fora do BaseHTTPMiddleware: cliente que desiste no meio do envio não vira erro 500.
+    app.add_middleware(LimiteCorpo)
     # Adicionado por último = executado primeiro: barra hosts estranhos (DNS rebinding).
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 

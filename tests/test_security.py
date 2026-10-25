@@ -1,9 +1,13 @@
+import asyncio
+from collections.abc import Iterator
+
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.testclient import TestClient
+from starlette.types import Message
 
-from salesos.security import CSRF_COOKIE, CSRF_FIELD, CSRF_HEADER, sign_token
+from salesos.security import CSRF_COOKIE, CSRF_FIELD, CSRF_HEADER, LIMITE_CORPO, sign_token
 from tests.conftest import TEST_SECRET
 
 
@@ -102,3 +106,79 @@ def test_first_post_without_cookie_is_rejected(form_client: TestClient) -> None:
 
 def test_get_does_not_require_csrf(client: TestClient) -> None:
     assert client.get("/health").status_code == 200
+
+
+def _token(cliente: TestClient) -> str:
+    cliente.get("/")
+    return sign_token(TEST_SECRET, cliente.cookies[CSRF_COOKIE])
+
+
+def _form(token: str, tamanho: int) -> bytes:
+    """Corpo urlencoded com exatamente `tamanho` bytes."""
+    inicio = f"{CSRF_FIELD}={token}&campo=".encode()
+    return inicio + b"x" * (tamanho - len(inicio))
+
+
+FORM = {"content-type": "application/x-www-form-urlencoded"}
+
+
+def test_body_above_limit_is_rejected_even_with_valid_token(form_client: TestClient) -> None:
+    corpo = _form(_token(form_client), LIMITE_CORPO + 1)
+    resposta = form_client.post("/_teste", content=corpo, headers=FORM)
+    assert resposta.status_code == 413
+    assert resposta.headers["cache-control"] == "no-store"
+
+
+def test_chunked_body_above_limit_is_rejected(form_client: TestClient) -> None:
+    """Sem Content-Length (transferência em blocos), o limite vale contando os bytes."""
+    corpo = _form(_token(form_client), LIMITE_CORPO + 1)
+
+    def blocos() -> Iterator[bytes]:
+        for i in range(0, len(corpo), 4096):
+            yield corpo[i : i + 4096]
+
+    resposta = form_client.post("/_teste", content=blocos(), headers=FORM)
+    assert resposta.request.headers.get("content-length") is None
+    assert resposta.status_code == 413
+
+
+def test_body_at_limit_with_valid_token_is_accepted(form_client: TestClient) -> None:
+    corpo = _form(_token(form_client), LIMITE_CORPO)
+    resposta = form_client.post("/_teste", content=corpo, headers=FORM)
+    assert resposta.status_code == 200
+    assert resposta.json() == {"ok": True}
+
+
+def test_client_disconnect_mid_body_is_not_a_server_error(app: FastAPI) -> None:
+    """Cliente que desiste no meio do envio: nenhuma resposta e nenhuma exceção (sem 500)."""
+    mensagens: list[Message] = [
+        {"type": "http.request", "body": b"csrf_token=x", "more_body": True},
+        {"type": "http.disconnect"},
+    ]
+    enviados: list[Message] = []
+
+    async def receive() -> Message:
+        return mensagens.pop(0)
+
+    async def send(mensagem: Message) -> None:
+        enviados.append(mensagem)
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": "/clientes",
+        "raw_path": b"/clientes",
+        "query_string": b"",
+        "root_path": "",
+        "headers": [
+            (b"host", b"127.0.0.1"),
+            (b"content-type", b"application/x-www-form-urlencoded"),
+        ],
+        "client": ("127.0.0.1", 50000),
+        "server": ("127.0.0.1", 8000),
+    }
+    asyncio.run(app(scope, receive, send))
+    assert enviados == []

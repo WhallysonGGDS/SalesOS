@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from httpx import Response
 from starlette.routing import BaseRoute
 
+from salesos.features.clientes.schemas import TEXTO_LONGO_MAX
 from salesos.security import CSRF_COOKIE, CSRF_FIELD, sign_token
 from tests.conftest import TEST_SECRET
 
@@ -342,3 +343,24 @@ def test_new_client_must_choose_an_origin(web: TestClient, db: Path) -> None:
     assert resposta.status_code == 422
     assert "Preencha este campo" in resposta.text
     assert _consulta(db, "SELECT count(*) FROM clientes") == [(0,)]
+
+
+def test_largest_legitimate_form_fits_the_body_limit(web: TestClient) -> None:
+    """Todos os campos no máximo, com caracteres de 4 bytes (viram 12 bytes no formulário)."""
+    grande = "\U0001f600"
+    cliente_id = _criar(
+        web,
+        nome=grande * 200,
+        nome_fantasia=grande * 200,
+        observacoes=grande * TEXTO_LONGO_MAX,
+    )
+    assert (
+        _post(
+            web,
+            f"/clientes/{cliente_id}/interacoes",
+            tipo="nota",
+            ocorrida_em="2026-10-20T14:30",
+            resumo=grande * TEXTO_LONGO_MAX,
+        ).status_code
+        == 303
+    )

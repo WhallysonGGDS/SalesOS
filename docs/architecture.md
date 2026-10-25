@@ -10,7 +10,8 @@ src/salesos/
                 segredo ≥ 32 caracteres; ALLOWED_HOSTS fixo; backup_dir
   db.py         Base declarativa, create_db_engine (PRAGMAs, permissões), get_session,
                 controle de FK nas migrações, sqlite_file e restringir
-  security.py   Cabeçalhos de segurança (inclui Cache-Control: no-store), cookie e CSRF
+  security.py   Cabeçalhos de segurança (inclui Cache-Control: no-store), cookie, CSRF e
+                limite do corpo das requisições
   main.py       create_app(settings) e run(): servidor e os comandos backup/restore/recover
   backup.py     Backup verificado e verificação de um backup (integridade, SHA-256,
                 revisão, estrutura)
@@ -31,9 +32,10 @@ tests/          pytest; cada teste roda numa pasta temporária, sem .env real e 
 ## Fluxo de uma requisição
 
 1. `TrustedHostMiddleware`: só `127.0.0.1`, `localhost` e `[::1]` (lista fixa, não configurável); outro `Host` → 400 (protege contra DNS rebinding).
-2. `security_middleware`: garante o cookie `salesos_csrf` (aleatório, HttpOnly, SameSite=Strict) e aplica os cabeçalhos de segurança.
-3. `require_csrf` (dependência global): em POST/PUT/PATCH/DELETE exige `csrf_token` no formulário ou `X-CSRF-Token` igual a `HMAC-SHA256(segredo, cookie)`; senão → 403. Vale só para rotas FastAPI (`@app.get/post…`, routers). Sub-apps montadas com `app.mount`, rotas Starlette puras e websockets **não** passam por ela: toda rota nova deve ser uma rota FastAPI.
-4. Rota: lê só os campos permitidos do formulário, valida com o schema, chama o serviço e responde 303 depois de um POST bem-sucedido; validação inválida → 422 com a mensagem no campo; registro inexistente → 404; cliente anonimizado → 409.
+2. `LimiteCorpo` (Fase 02.1, item S2): lê o corpo até `LIMITE_CORPO` (256 KiB; o maior formulário legítimo tem cerca de 65 KB) e o entrega inteiro à aplicação; acima disso → 413 com texto simples, com ou sem `Content-Length`; fica fora do `security_middleware` para que um cliente que desiste no meio do envio não vire erro 500. Protege a leitura do formulário pelo CSRF e pelas rotas.
+3. `security_middleware`: garante o cookie `salesos_csrf` (aleatório, HttpOnly, SameSite=Strict) e aplica os cabeçalhos de segurança.
+4. `require_csrf` (dependência global): em POST/PUT/PATCH/DELETE exige `csrf_token` no formulário ou `X-CSRF-Token` igual a `HMAC-SHA256(segredo, cookie)`; senão → 403. Vale só para rotas FastAPI (`@app.get/post…`, routers). Sub-apps montadas com `app.mount`, rotas Starlette puras e websockets **não** passam por ela: toda rota nova deve ser uma rota FastAPI.
+5. Rota: lê só os campos permitidos do formulário, valida com o schema, chama o serviço e responde 303 depois de um POST bem-sucedido; validação inválida → 422 com a mensagem no campo; registro inexistente → 404; cliente anonimizado → 409.
 
 Rotas: `GET /`, `GET /health`, `GET /clientes` (busca, arquivados, paginação de 20), `GET /clientes/novo` (formulário) e `POST /clientes` (cria), `GET /clientes/{id}`, `GET /clientes/{id}/editar` e `POST /clientes/{id}`, `POST /clientes/{id}/arquivar|desarquivar|anonimizar|contatos|interacoes`, `GET /contatos/{id}/editar`, `POST /contatos/{id}` e `/contatos/{id}/remover`. Não existe rota para editar ou excluir interações.
 

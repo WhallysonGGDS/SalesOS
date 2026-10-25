@@ -10,11 +10,15 @@ import secrets
 from collections.abc import Awaitable, Callable
 
 from fastapi import HTTPException, Request, Response
+from fastapi.responses import PlainTextResponse
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 CSRF_COOKIE = "salesos_csrf"
 CSRF_FIELD = "csrf_token"
 CSRF_HEADER = "X-CSRF-Token"
 UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+# O maior formulário legítimo (5.000 caracteres de 4 bytes, codificados) tem cerca de 65 KB.
+LIMITE_CORPO = 256 * 1024
 
 SECURITY_HEADERS = {
     "Content-Security-Policy": (
@@ -78,3 +82,49 @@ async def require_csrf(request: Request) -> None:
             status_code=403,
             detail="Formulário expirado ou inválido. Recarregue a página e envie de novo.",
         )
+
+
+class LimiteCorpo:
+    """Recusa com 413 corpos maiores que `LIMITE_CORPO`, antes de qualquer leitura de formulário.
+
+    O corpo é lido aqui, até o limite, e entregue inteiro à aplicação. Vale com ou sem
+    Content-Length e protege tanto o CSRF quanto as rotas que leem o formulário.
+    """
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        corpo = bytearray()
+        while True:
+            mensagem = await receive()
+            if mensagem["type"] == "http.disconnect":
+                return
+            corpo += mensagem.get("body", b"")
+            if len(corpo) > LIMITE_CORPO:
+                await _muito_grande(scope, receive, send)
+                return
+            if not mensagem.get("more_body", False):
+                break
+        entregue = False
+
+        async def reenviar() -> Message:
+            nonlocal entregue
+            if entregue:
+                return await receive()  # depois do corpo, só o aviso de desconexão
+            entregue = True
+            return {"type": "http.request", "body": bytes(corpo), "more_body": False}
+
+        await self.app(scope, reenviar, send)
+
+
+async def _muito_grande(scope: Scope, receive: Receive, send: Send) -> None:
+    resposta = PlainTextResponse(
+        "Envio grande demais. Reduza o texto e tente de novo.",
+        status_code=413,
+        headers=SECURITY_HEADERS,
+    )
+    await resposta(scope, receive, send)
