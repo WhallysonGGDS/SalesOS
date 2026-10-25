@@ -1,0 +1,28 @@
+{# Uma oportunidade por linha: título, cliente e valor. Sem cards. #}
+{% macro itens(oportunidades, nomes, com_etapa=false) %}
+<ol class="ops">
+  {% for o in oportunidades %}
+  <li class="oportunidade">
+    <a class="op-titulo" href="/oportunidades/{{ o.id }}">{{ o.titulo }}</a>
+    <span class="op-cliente">{{ nomes.get(o.cliente_id, "") }}</span>
+    {% if com_etapa %}<span class="op-etapa">{{ rotulos[o.etapa] }}</span>{% endif %}
+    <span class="op-valor">{{ o.valor_centavos | reais if o.valor_centavos is not none else "Sem valor" }}</span>
+  </li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+{% macro filtros_form(acao, filtros, erros) %}
+{% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
+<form class="filtros" method="get" action="{{ acao }}" novalidate aria-label="Filtrar oportunidades">
+  {{ resumo_erros(erros, "Filtro inválido. Corrija os campos indicados.") }}
+  {% if filtros.get("etapa") %}<input type="hidden" name="etapa" value="{{ filtros.etapa }}">{% endif %}
+  <div class="grade-campos">
+    {{ escolha("situacao", "Situação", situacoes.keys() | list, filtros.get("situacao", "todas"), erros, rotulos) }}
+    {{ campo("de", "De", filtros.get("de"), erros, tipo="date") }}
+    {{ campo("ate", "Até", filtros.get("ate"), erros, tipo="date") }}
+  </div>
+  <p class="dica">O período usa a data de abertura das oportunidades em andamento e a data de fechamento das ganhas e perdidas.</p>
+  <div class="acoes"><button class="botao" type="submit">Filtrar</button>{% if filtros %}<a href="{{ acao }}">Limpar filtros</a>{% endif %}</div>
+</form>
+{% endmacro %}

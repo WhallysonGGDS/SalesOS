@@ -26,12 +26,13 @@ src/salesos/
     schemas.py    Entrada validada (Pydantic, extra="forbid")
     service.py    Regras: CRUD, busca, eventos, anonimização (uma unidade de trabalho por função)
     router.py     Rotas finas e páginas de erro sem dados pessoais
-  features/oportunidades/  (Fase 03, em construção)
+  features/oportunidades/  (Fase 03)
     models.py     Oportunidade e Movimentacao; CHECKs de etapa, motivo, fechamento e valor
     periodo.py    Dias locais → intervalo UTC (regras de fuso do sistema para cada data)
     schemas.py    Entrada validada: valor pt-BR, datas AAAA-MM-DD, motivo só na perda, filtros
     service.py    Regras R1–R10; operação, movimentação e evento no mesmo commit
-  web/templates base.html, index.html, clientes/*.html (Jinja2, sem JavaScript)
+    router.py     Rotas finas; 422 no campo para RegraViolada e filtros inválidos
+  web/templates base.html, index.html, clientes/*.html, oportunidades/*.html (Jinja2, sem JavaScript)
   web/static    app.css
 migrations/     Alembic; 0001 = linha de base vazia; 0002 = clientes, contatos, interações;
                 0003 = oportunidades e movimentações (Fase 03)
@@ -47,6 +48,8 @@ tests/          pytest; cada teste roda numa pasta temporária, sem .env real e 
 5. Rota: lê só os campos permitidos do formulário, valida com o schema, chama o serviço e responde 303 depois de um POST bem-sucedido; validação inválida → 422 com a mensagem no campo; registro inexistente → 404; cliente anonimizado → 409.
 
 Rotas: `GET /`, `GET /health`, `GET /clientes` (busca, arquivados, paginação de 20), `GET /clientes/novo` (formulário) e `POST /clientes` (cria), `GET /clientes/{id}`, `GET /clientes/{id}/editar` e `POST /clientes/{id}`, `POST /clientes/{id}/arquivar|desarquivar|anonimizar|contatos|interacoes`, `GET /contatos/{id}/editar`, `POST /contatos/{id}` e `/contatos/{id}/remover`. Não existe rota para editar ou excluir interações.
+
+Rotas do funil (Fase 03): `GET /oportunidades` (colunas por etapa, até 20 cada; filtros `situacao`, `de`, `ate`), `GET /oportunidades/lista` (20 por página; também `etapa`), `GET /oportunidades/nova?cliente_id=` e `POST /oportunidades`, `GET /oportunidades/{id}`, `GET /oportunidades/{id}/editar` e `POST /oportunidades/{id}`, `POST /oportunidades/{id}/etapa`. Só a criação e `/etapa` gravam movimentações; nenhuma rota as edita ou apaga. Ids fora do inteiro de 64 bits → 422 (em `/clientes/{id}` isso ainda gera 500: pendência registrada).
 
 ## Banco de dados
 

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, resumo_erros %}
+{% block title %}{{ "Editar oportunidade" if oportunidade else "Nova oportunidade" }} · SalesOS{% endblock %}
+{% block content %}
+{% set volta = "/oportunidades/%d" % oportunidade.id if oportunidade else "/clientes/%d" % cliente.id %}
+<p class="trilha"><a href="/clientes/{{ cliente.id }}">{{ cliente.nome }}</a></p>
+<h1 class="titulo">{{ "Editar oportunidade" if oportunidade else "Nova oportunidade" }}</h1>
+<form class="formulario" method="post" action="{{ '/oportunidades/%d' % oportunidade.id if oportunidade else '/oportunidades' }}" novalidate>
+  {{ resumo_erros(erros, "Não foi possível salvar. Corrija os campos indicados abaixo.") }}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+  {% if not oportunidade %}<input type="hidden" name="cliente_id" value="{{ cliente.id }}">{% endif %}
+  {{ campo("titulo", "O que está sendo negociado", dados.get("titulo"), erros, maximo=200, obrigatorio=true) }}
+  <div class="grade-campos">
+    {{ campo("valor_centavos", "Valor (R$)", dados.get("valor_centavos"), erros, maximo=17, dica="Formato 1.234,56. Obrigatório para marcar como ganha.") }}
+    {{ campo("previsao_fechamento", "Previsão de fechamento", dados.get("previsao_fechamento"), erros, tipo="date") }}
+  </div>
+  {{ campo("observacoes", "Observações", dados.get("observacoes"), erros, tipo="textarea", maximo=5000, dica="Até 5.000 caracteres.") }}
+  <div class="acoes">
+    <button class="botao botao-principal" type="submit">{{ "Salvar alterações" if oportunidade else "Criar oportunidade" }}</button>
+    <a href="{{ volta }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

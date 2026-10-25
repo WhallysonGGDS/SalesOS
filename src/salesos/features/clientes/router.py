@@ -17,6 +17,8 @@ from salesos.db import get_session
 from salesos.features.clientes import service
 from salesos.features.clientes.models import ORIGENS, TIPOS_INTERACAO
 from salesos.features.clientes.schemas import ClienteIn, ContatoIn, InteracaoIn
+from salesos.features.oportunidades import service as oportunidades
+from salesos.features.oportunidades.service import ROTULOS_ETAPAS
 from salesos.formularios import (
     data_iso,
     data_local,
@@ -59,7 +61,7 @@ def _pagina(request: Request, nome: str, contexto: dict[str, Any], status: int =
     base = {
         "origens": ORIGENS,
         "tipos_interacao": TIPOS_MANUAIS,
-        "rotulos": ROTULOS,
+        "rotulos": ROTULOS | ROTULOS_ETAPAS,
         "secao": "clientes",
     }
     return renderizar(request, nome, base | contexto, status)
@@ -151,6 +153,7 @@ def _detalhe(
         "contatos": contatos,
         "nomes_contatos": {c.id: c.nome for c in contatos},
         "linha": service.listar_interacoes(session, cliente_id),
+        "oportunidades": oportunidades.oportunidades_do_cliente(session, cliente_id),
         "agora": datetime.now().strftime("%Y-%m-%dT%H:%M"),
         "contato": {},
         "erros_contato": {},

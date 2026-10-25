@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "oportunidades/_itens.html" import itens, filtros_form with context %}
+{% block title %}Oportunidades · SalesOS{% endblock %}
+{% block content %}
+<p class="trilha"><a href="/oportunidades">Funil</a></p>
+<h1 id="titulo" class="titulo">{{ rotulos[filtros.etapa] if filtros.get("etapa") else "Todas as oportunidades" }}</h1>
+
+{{ filtros_form("/oportunidades/lista", filtros, erros) }}
+
+{% if resultado and resultado.itens %}
+{{ itens(resultado.itens, nomes, com_etapa=true) }}
+{% elif resultado %}
+<div class="vazio"><p>Nenhuma oportunidade neste filtro.</p></div>
+{% endif %}
+
+{% if anterior or proxima %}
+<nav class="paginas" aria-label="Páginas">
+  {% if anterior %}<a href="{{ anterior }}" rel="prev">Página anterior</a>{% else %}<span></span>{% endif %}
+  <span aria-current="page">Página {{ resultado.pagina }}</span>
+  {% if proxima %}<a href="{{ proxima }}" rel="next">Próxima página</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

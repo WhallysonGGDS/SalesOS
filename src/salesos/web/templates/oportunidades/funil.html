@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "oportunidades/_itens.html" import itens, filtros_form with context %}
+{% block title %}Funil · SalesOS{% endblock %}
+{% block content %}
+<div class="cabecalho">
+  <h1 class="titulo">Funil</h1>
+  <a href="/oportunidades/lista{{ '?' ~ (filtros | urlencode) if filtros }}">Ver todas em lista</a>
+</div>
+
+{{ filtros_form("/oportunidades", filtros, erros) }}
+
+{% set total = colunas.values() | map("length") | sum %}
+{% if not erros and total == 0 %}
+<div class="vazio">
+  <p>Nenhuma oportunidade {{ "neste filtro" if filtros else "ainda" }}. Oportunidades nascem na página de um cliente.</p>
+  <a class="botao" href="/clientes">Escolher um cliente</a>
+</div>
+{% elif not erros %}
+{% for grupo, nome in [(etapas_abertas, "Em andamento"), (["ganha", "perdida"], "Resultados")] %}
+{% set visiveis = grupo | select("in", colunas) | list %}
+{% if visiveis %}
+<section class="funil {{ 'funil-finais' if loop.last else 'funil-abertas' }}" aria-label="{{ nome }}">
+  {% for etapa in visiveis %}
+  <section class="etapa" aria-labelledby="etapa-{{ etapa }}">
+    <h2 id="etapa-{{ etapa }}">{{ rotulos[etapa] }} <span class="contagem">{{ colunas[etapa] | length }}<span class="vh"> oportunidades</span></span></h2>
+    {% if colunas[etapa] %}
+    {{ itens(colunas[etapa], nomes) }}
+    {% if colunas[etapa] | length >= por_coluna %}<a class="mais" href="/oportunidades/lista?{{ (filtros | dictsort | list + [('etapa', etapa)]) | urlencode }}">Mostrando as {{ por_coluna }} mais recentes. Ver todas</a>{% endif %}
+    {% else %}
+    <p class="vazio-linha">Nenhuma.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</section>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endblock %}

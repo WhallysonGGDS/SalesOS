@@ -32,6 +32,27 @@
   {% if cliente.observacoes %}<div class="ficha-larga"><dt>Observações</dt><dd class="texto-livre">{{ cliente.observacoes }}</dd></div>{% endif %}
 </dl>
 
+<section id="oportunidades" class="secao" aria-labelledby="titulo-oportunidades">
+  <div class="cabecalho">
+    <h2 id="titulo-oportunidades">Oportunidades</h2>
+    {% if not anonimizado %}<a class="botao" href="/oportunidades/nova?cliente_id={{ cliente.id }}">Nova oportunidade</a>{% endif %}
+  </div>
+  {% if oportunidades %}
+  <ol class="ops">
+    {% for o in oportunidades %}
+    <li class="oportunidade">
+      <a class="op-titulo" href="/oportunidades/{{ o.id }}">{{ o.titulo }}</a>
+      <span class="op-etapa">{{ rotulos[o.etapa] }}</span>
+      <span class="op-valor">{{ o.valor_centavos | reais if o.valor_centavos is not none else "Sem valor" }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% if oportunidades | length >= 50 %}<p class="dica">Mostrando as 50 oportunidades mais recentes.</p>{% endif %}
+  {% else %}
+  <p class="vazio-linha">Nenhuma oportunidade com este cliente.</p>
+  {% endif %}
+</section>
+
 <div class="colunas">
   <section id="contatos" class="secao" aria-labelledby="titulo-contatos">
     <h2 id="titulo-contatos">Contatos</h2>

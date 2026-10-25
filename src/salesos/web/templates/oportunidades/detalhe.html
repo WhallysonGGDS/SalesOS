@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
+{% block title %}{{ oportunidade.titulo }} · SalesOS{% endblock %}
+{% block content %}
+{% set anonimizado = cliente.anonimizado_em is not none %}
+<p class="trilha"><a href="/clientes/{{ cliente.id }}">{{ cliente.nome }}</a></p>
+<div class="cabecalho">
+  <h1 class="titulo">{{ oportunidade.titulo }}</h1>
+  {% if not anonimizado %}<a class="botao" href="/oportunidades/{{ oportunidade.id }}/editar">Editar dados</a>{% endif %}
+</div>
+{% if anonimizado %}<p class="faixa" role="status">O cliente foi anonimizado: esta oportunidade não aceita alterações.</p>{% endif %}
+
+<dl class="ficha">
+  <div><dt>Etapa</dt><dd class="etapa-atual">{{ rotulos[oportunidade.etapa] }}</dd></div>
+  <div><dt>Valor</dt><dd>{{ oportunidade.valor_centavos | reais if oportunidade.valor_centavos is not none else "Sem valor" }}</dd></div>
+  {% if oportunidade.previsao_fechamento %}<div><dt>Previsão de fechamento</dt><dd>{{ oportunidade.previsao_fechamento | data_curta }}</dd></div>{% endif %}
+  <div><dt>Aberta em</dt><dd><time datetime="{{ oportunidade.created_at | data_iso }}">{{ oportunidade.created_at | data_local }}</time></dd></div>
+  {% if oportunidade.fechada_em %}<div><dt>Fechada em</dt><dd><time datetime="{{ oportunidade.fechada_em | data_iso }}">{{ oportunidade.fechada_em | data_local }}</time></dd></div>{% endif %}
+  {% if oportunidade.motivo_perda %}<div><dt>Motivo da perda</dt><dd>{{ rotulos[oportunidade.motivo_perda] }}</dd></div>{% endif %}
+  {% if oportunidade.motivo_detalhe %}<div class="ficha-larga"><dt>Detalhe do motivo</dt><dd class="texto-livre">{{ oportunidade.motivo_detalhe }}</dd></div>{% endif %}
+  {% if oportunidade.observacoes %}<div class="ficha-larga"><dt>Observações</dt><dd class="texto-livre">{{ oportunidade.observacoes }}</dd></div>{% endif %}
+</dl>
+{% if oportunidade.etapa == "ganha" %}<p class="dica">Venda ganha não significa contrato assinado nem pagamento recebido.</p>{% endif %}
+
+<div class="colunas">
+  {% if not anonimizado %}
+  <section class="secao" aria-labelledby="titulo-etapa">
+    <h2 id="titulo-etapa">Mudar etapa</h2>
+    <form class="formulario" method="post" action="/oportunidades/{{ oportunidade.id }}/etapa" novalidate>
+      {{ resumo_erros(erros, "A etapa não foi alterada. Corrija os campos indicados.") }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      {{ escolha("etapa", "Nova etapa", etapas, mudanca.get("etapa"), erros, rotulos) }}
+      {{ escolha("motivo_perda", "Motivo da perda", motivos, mudanca.get("motivo_perda"), erros, rotulos, vazio="Só para venda perdida") }}
+      {{ campo("motivo_detalhe", "Detalhe do motivo", mudanca.get("motivo_detalhe"), erros, maximo=500, dica="Opcional, só para venda perdida.") }}
+      <p class="dica">Para trocar uma venda ganha por perdida (ou o contrário), reabra antes em uma etapa em andamento.</p>
+      <button class="botao botao-principal" type="submit">Salvar etapa</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="secao" aria-labelledby="titulo-historico">
+    <h2 id="titulo-historico">Histórico de etapas</h2>
+    <ol class="tempo">
+      {% for m in historico %}
+      <li class="tempo-humano">
+        <time datetime="{{ m.ocorrida_em | data_iso }}">{{ m.ocorrida_em | data_local }}</time>
+        <p>{% if m.de_etapa %}De {{ rotulos[m.de_etapa] }} para {{ rotulos[m.para_etapa] }}{% else %}Criada em {{ rotulos[m.para_etapa] }}{% endif %}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+</div>
+{% endblock %}
