@@ -144,5 +144,49 @@ Plano: `docs/superpowers/plans/2026-10-27-b1-restaurar-backup-antigo.md`. Desenh
   - Achados baixos corrigidos: `%` no caminho; migrado não verificado após interrupção; limpeza silenciosa no Windows; janela entre as publicações.
 - **Windows: não executado.** Os comandos de PowerShell do onboarding foram revisados, não testados.
 
+## Fase 04 — Tarefas e agenda (implementada e verificada no Linux)
+
+Plano: `docs/superpowers/plans/2026-10-25-fase-04-tarefas.md`. Decisões: ADR `0007-tarefas.md` (D1–D10).
+
+| Etapa | Entrega | Commit |
+|---|---|---|
+| 0 | ADR 0007 | `9e46572` |
+| 1 | `intervalo_utc` em `periodo.py`, `IdDep` em `formularios.py`, fixture de fuso compartilhada | `45b9a89` |
+| 2 | Modelo e migração `0004` (e correção de lint publicada em seguida) | `9d6aba4`, `c709b32` |
+| 3 | Serviço, schemas e D10 na anonimização | `67d79ab` |
+| 4 | Rotas e telas; decisão do usuário sobre tarefas de clientes anonimizados | `06d646a`, `09f7949` |
+| 5 | Acessibilidade e revisões da fase | `90a5bb1`, `817aa68`, `39ceab1` |
+| 6 | Documentação | commit da Etapa 6 |
+
+| Critério de aceite | Resultado (Linux) |
+|---|---|
+| Ruff, formatação e mypy strict | Passou |
+| pytest | 577 passed, 1 skipped (teste só do Windows), 1 aviso conhecido |
+| Migração `0004`: upgrade, downgrade, upgrade de novo e `alembic check`; backup da `0003` recusado sem `--migrar` e migrado com ele | Passou |
+| CHECKs e FKs `RESTRICT` das tarefas e do histórico | Passou (SQL direto) |
+| D1–D10, histórico só de acréscimo, um commit por operação (falha injetada desfaz tudo) | Passou |
+| Vencidas: pendente com prazo anterior ao momento atual, inclusive no instante exato do prazo e dentro do mesmo segundo | Passou |
+| Período local → UTC no filtro da agenda e prazo lido no fuso do computador | Passou no Linux; **não verificado no Windows** |
+| CSRF, XSS, 303, 404/409, 422 no campo, GET sem efeito (banco inteiro), ids e datas extremos sem 500 | Passou |
+| Interface: 12 telas × 4 larguras, teclado, reflow a 200%, sem rolagem horizontal nem erro de CSP | Passou no Chromium |
+| Windows | **Pendente**: checklist em `docs/setup.md` (itens 18–21) |
+
+**Mutações detectadas:** 36 nas Etapas 3 a 5 (12 no serviço, 16 nas rotas e telas, 3 na decisão sobre anonimizados, 5 na revisão geral), todas detectadas, além das de CHECK e FK da Etapa 2.
+- **Banco:** CHECKs, e um teste fraco de FK refeito com mutação `CASCADE`.
+- **Serviço:** vencida com `<=` (SQL e Python); conclusão duplicada; oportunidade de outro cliente; evento com o título; fechada para fechada; concluída contando como vencida; editar concluída; anonimização sem apagar a descrição ou desligada; prazo com frações; `oportunidade_id` sem teto; clientes anonimizados no contador ou na agenda.
+- **Rotas e telas:** oportunidade alheia no formulário novo; página sem teto; id do formulário sem teto; contador derrubando a página inicial, engolindo erro real ou avisando sem tabela; editar fechada (GET e POST); vencida repetida em "Próximas"; vencida só por cor; contador sem texto; botão de editar numa fechada; estouro de fuso em `hora_local` e nos dois schemas; oportunidade antiga perdida na edição; aviso de vencidas ausente ou contando anonimizado; filtros padrão contando como filtro.
+- **Testes fracos encontrados por mutação e reforçados:** limite exato do prazo; título "Vencidas" contendo a palavra "Vencida"; silêncio quando falta a tabela.
+
+**Revisões:** revisão de segurança independente (só leitura) em cada etapa de código, revisão de segurança da fase (prompt 13 do Toolkit, relatório privado fora do repositório) e revisão geral (`superpowers:requesting-code-review`, "Ready, with minor fixes"). Achados corrigidos:
+- **Alto:** data que o fuso leva para fora dos anos 1–9999 → erro 500 em tarefas **e** em interações (causa em `hora_local` e nos schemas).
+- **Médios:** id enorme de oportunidade → 500; contador e marcador discordando dentro do mesmo segundo; vínculo com oportunidade antiga perdido na edição; tarefas de cliente anonimizado vencidas para sempre (decisão do usuário: saem da agenda e do contador).
+- **Baixos e menores:** `oportunidade_id` com dígito Unicode ou acima de 2⁶³ ao refazer o formulário → 500; contador escondendo erros reais do banco; 409 e 422 diferentes para a mesma situação; mensagem de fechada para fechada com direção fixa; ano limite antes da conversão para UTC; número aceito como prazo; aviso de vencidas por página; rótulos no router; nome "Agenda" × "Tarefas"; link da tarefa sem a linha de apoio para leitor de tela.
+
+**Riscos e pendências que continuam:**
+- **Windows:** nada desta fase foi executado no Windows (checklist B, itens 18–21), nem B1 (item 17).
+- **P1:** finalidade e prazo de retenção dos dados comerciais (agora também tipo, prioridade, estado e datas das tarefas) de clientes anonimizados bloqueiam dados reais.
+- O contador de vencidas não usa o índice (`datetime(prazo)`); aceitável para um usuário.
+- Pré-existentes, fora do escopo: `/clientes/{id}` com id enorme → 500; a checagem de estrutura do backup não compara o texto dos CHECKs; `alembic upgrade` e servidor iniciado fora do `salesos` não pegam a trava.
+
 ## Próximas
-Fase 04 — Tarefas e agenda: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`).
+Fase 05 — Serviços, propostas, contratos e assinaturas: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`) e a definição P1.

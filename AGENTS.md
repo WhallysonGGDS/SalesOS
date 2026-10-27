@@ -6,7 +6,7 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
 
 ## Estado atual
 
-- **Implementado:** fundação técnica (Fase 01); clientes, contatos, interações, anonimização, backup e restauração (Fase 02); hardening D, E e S2 (Fase 02.1); oportunidades e funil (Fase 03). Detalhes em `docs/architecture.md` e `docs/phases.md`.
+- **Implementado:** fundação técnica (Fase 01); clientes, contatos, interações, anonimização, backup e restauração (Fase 02); hardening D, E e S2 (Fase 02.1); oportunidades e funil (Fase 03); restauração de backup antigo com `--migrar` (B1, só Linux); tarefas e agenda (Fase 04). Detalhes em `docs/architecture.md` e `docs/phases.md`.
 - **Pendente:**
   - **bloqueiam dados reais:** validação no Windows (checklist em `docs/setup.md`); B1 implementado e testado **só no Linux** (`restore --migrar`, ADR 0005); falta confirmá-lo no Windows (item 17 da checklist B); P1, finalidade e prazo de retenção dos dados comerciais de clientes anonimizados e revisão da política (`docs/privacy.md`);
   - CPF, CNPJ e telefone (sem fonte oficial aprovada);
@@ -16,8 +16,8 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
   - `/clientes/{id}` com id maior que o inteiro de 64 bits gera erro 500; a checagem de estrutura do backup não compara o texto dos CHECKs;
   - fuso histórico (horário de verão antigo) não verificado no Windows (P3);
   - leitor de tela e zoom real do navegador não testados;
-  - Fases 04 a 08 (tarefas, serviços/propostas/contratos/assinaturas, dashboard e relatórios, segurança e expansão, validação integral).
-- **Próxima etapa:** Fase 04 (tarefas e agenda), que só começa com aprovação explícita do usuário.
+  - Fases 05 a 08 (serviços/propostas/contratos/assinaturas, dashboard e relatórios, segurança e expansão, validação integral).
+- **Próxima etapa:** Fase 05 (serviços, propostas, contratos e assinaturas), que só começa com aprovação explícita do usuário.
 - **Stack:** Python 3.15.0, uv, FastAPI, SQLAlchemy 2.1, Alembic, SQLite, Pydantic Settings, Jinja2, pytest + HTTPX, Ruff e mypy (ADR `docs/decisions/0001-stack-e-python.md`).
 
 ## Comandos canônicos

@@ -1,6 +1,6 @@
 # 0007 — Tarefas e follow-ups
 
-**Status:** aceita (Fase 04; plano `docs/superpowers/plans/2026-10-25-fase-04-tarefas.md`, decisões aprovadas em 2026-10-27)
+**Status:** aceita e implementada no Linux (Fase 04; plano `docs/superpowers/plans/2026-10-25-fase-04-tarefas.md`, decisões aprovadas em 2026-10-27). Windows não verificado.
 
 **Contexto:** o briefing (7.4) pede ligações, reuniões, mensagens registradas manualmente e retornos comerciais, com datas e prazos, prioridades, status, histórico de conclusão e alertas internos para tarefas vencidas, sem enviar mensagens nem integrar nada externamente.
 
@@ -27,3 +27,9 @@
 - "Vencida" depende do relógio do computador. Os testes injetam o momento atual em vez de depender do relógio.
 - Os filtros de período por dia local herdam a limitação de P3: no Windows, a precisão histórica do fuso não está verificada.
 - Sem recorrência, responsável, lembretes nem calendário. As sugestões S-a, S-b e S-c ficaram fora por decisão do usuário.
+- **Como ficou na implementação:**
+  - O prazo é gravado em segundos inteiros, para que o contador (SQL) e a marcação de cada linha (Python) usem a mesma precisão. No instante exato do prazo, a tarefa ainda não está vencida.
+  - O prazo só aceita data e hora por extenso; um número não é lido como timestamp. Datas que o fuso leva para fora dos anos 1–9999 são recusadas no campo.
+  - O aviso de D7 aparece na navegação ("Tarefas, N vencidas", texto) e no topo da seção de tarefas do cliente e da oportunidade, contado entre as tarefas listadas (até 50).
+  - O contador compara `datetime(prazo)`, o que impede o SQLite de usar o índice `ix_tarefas_estado_prazo` nessa comparação. Aceitável para um usuário; se a tabela crescer, comparar a coluna direto.
+  - Editar uma tarefa fechada responde 409 ("reabra antes"), tanto ao abrir o formulário quanto ao enviá-lo.

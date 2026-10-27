@@ -56,6 +56,16 @@ Toolkit: Vibe Coding Toolkit, revisão `790a895` (detalhes em `docs/toolkit/`).
 | Chromium: 9 telas do funil e 6 de clientes × 320/390/768/1440 px; contraste, foco no Tab, alvos de 44 px, rótulos, um `h1`, sem rolagem horizontal nem erro de CSP | Passou (dados fictícios no scratchpad) |
 | Dados usados | Só fictícios, em bancos temporários; `data/` nunca foi aberto |
 
+## Evidências da Fase 04 (Cloud, Linux, 2026-10-27)
+
+| Verificação | Resultado |
+|---|---|
+| Ruff, formatação e mypy strict | Sem erros |
+| `uv run pytest` | 577 passed, 1 skipped (teste só do Windows), 1 aviso conhecido |
+| Migração `0004` num banco temporário: upgrade, downgrade, upgrade de novo e `alembic check`; backup da `0003` recusado sem `--migrar` e restaurado com ele | Passou |
+| Chromium: 12 telas (agenda, filtros inválidos, detalhe, formulário, cliente, oportunidade) × 320/390/768/1440 px; contraste, foco no Tab, alvos de 44 px, rótulos, um `h1`, sem rolagem horizontal nem erro de CSP; teclado no filtro recolhível; reflow em 640 e 720 px | Passou (dados fictícios no scratchpad) |
+| Dados usados | Só fictícios, em bancos temporários; `data/` nunca foi aberto |
+
 ## Pendente no Windows
 
 Fase 01:
@@ -70,7 +80,7 @@ Fase 01:
 
 Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/Users/<você>/AppData/Local/Temp/salesos-teste/salesos.db` e `SALESOS_BACKUP_DIR` numa pasta de teste, com dados fictícios. Ao terminar, remova essas linhas do `.env`.
 
-1. `uv run pytest`: resultado esperado `437 passed, 14 skipped, 1 warning` (estimativa; nunca executado no Windows). O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
+1. `uv run pytest`: resultado esperado `562 passed, 16 skipped, 1 warning` (estimativa; nunca executado no Windows). O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
 2. Com o servidor ligado, `uv run salesos backup` cria o backup e o `.db.json`.
 3. Com o servidor ligado, `uv run salesos restore <backup>` é recusado ("Outro processo do SalesOS…").
 4. Servidor desligado e o banco aberto no DB Browser: o restore é recusado ("Feche os programas…") sem alterar nada.
@@ -87,6 +97,11 @@ Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/User
 15. (Fase 03) Filtro de período no funil: uma oportunidade fechada perto da meia-noite aparece no dia local certo; `De` depois de `Até` mostra a mensagem no campo.
 16. (Fase 03) Seletor de data do filtro e da previsão de fechamento em pt-BR (dd/mm/aaaa).
 17. (B1) Num banco de teste parado na revisão `0002` (`uv run alembic upgrade 0002` com `SALESOS_DATABASE_URL` de teste), criar um cliente fictício e um backup; voltar o banco de teste para o head (`uv run alembic upgrade head`). `uv run salesos restore <backup>` sem a opção é recusado; com `--migrar`, restaura o cliente fictício, o backup original continua com o mesmo SHA-256 (`Get-FileHash`) e não sobra pasta `.migracao-*` em `backups\`.
+
+18. (Fase 04) Criar uma tarefa com prazo `10:00` de amanhã: o detalhe e a agenda mostram `10:00` no fuso do Windows; o seletor de data e hora aparece em pt-BR.
+19. (Fase 04) Tarefa com prazo um minuto no passado: aparece em "Vencidas" com a palavra **Vencida** e a navegação mostra "Tarefas, 1 vencida"; ao concluir, o contador some; reabrir volta para pendente e o histórico mostra Criada, Concluída e Reaberta.
+20. (Fase 04) Filtro de prazo por dia na agenda: uma tarefa com prazo perto da meia-noite aparece no dia local certo.
+21. (Fase 04) Narrador ou NVDA na agenda: o link de cada tarefa é lido com a linha de apoio ("Vencida, Ligação, ...").
 
 Só depois disso (o item 17 confirma B1 no Windows), **da definição de retenção (P1, `docs/privacy.md`)**, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
 

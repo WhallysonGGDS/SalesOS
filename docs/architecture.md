@@ -33,10 +33,15 @@ src/salesos/
     schemas.py    Entrada validada: valor pt-BR, datas AAAA-MM-DD, motivo só na perda, filtros
     service.py    Regras R1–R10; operação, movimentação e evento no mesmo commit
     router.py     Rotas finas; 422 no campo para RegraViolada e filtros inválidos
-  web/templates base.html, index.html, clientes/*.html, oportunidades/*.html (Jinja2, sem JavaScript)
+  features/tarefas/  (Fase 04)
+    models.py     Tarefa e TarefaEvento; CHECKs de tipo, prioridade, estado, ação e datas de fechamento
+    schemas.py    Entrada validada: prazo por extenso em UTC e segundos inteiros, filtros da agenda
+    service.py    Regras D1–D10; operação, evento da tarefa e evento do cliente no mesmo commit
+    router.py     Rotas finas; contador de vencidas da navegação; 409 para tarefa fechada
+  web/templates base.html, index.html, clientes/*.html, oportunidades/*.html, tarefas/*.html (Jinja2, sem JavaScript)
   web/static    app.css
 migrations/     Alembic; 0001 = linha de base vazia; 0002 = clientes, contatos, interações;
-                0003 = oportunidades e movimentações (Fase 03)
+                0003 = oportunidades e movimentações (Fase 03); 0004 = tarefas e histórico (Fase 04)
 tests/          pytest; cada teste roda numa pasta temporária, sem .env real e sem data/
 ```
 
@@ -52,12 +57,15 @@ Rotas: `GET /`, `GET /health`, `GET /clientes` (busca, arquivados, paginação d
 
 Rotas do funil (Fase 03): `GET /oportunidades` (colunas por etapa, até 20 cada; filtros `situacao`, `de`, `ate`), `GET /oportunidades/lista` (20 por página; também `etapa`), `GET /oportunidades/nova?cliente_id=` e `POST /oportunidades`, `GET /oportunidades/{id}`, `GET /oportunidades/{id}/editar` e `POST /oportunidades/{id}`, `POST /oportunidades/{id}/etapa`. Só a criação e `/etapa` gravam movimentações; nenhuma rota as edita ou apaga. Ids fora do inteiro de 64 bits → 422 (em `/clientes/{id}` isso ainda gera 500: pendência registrada).
 
+Rotas das tarefas (Fase 04): `GET /tarefas` (agenda em lista: vencidas da página primeiro, filtros `estado`, `tipo`, `prioridade`, `de`, `ate`, 20 por página), `GET /tarefas/nova?cliente_id=&oportunidade_id=` e `POST /tarefas`, `GET /tarefas/{id}`, `GET /tarefas/{id}/editar` e `POST /tarefas/{id}` (só pendente; fechada → 409), `POST /tarefas/{id}/concluir|cancelar|reabrir`. Não há exclusão. A navegação mostra "Tarefas, N vencidas" em todas as páginas: uma consulta por página, numa sessão própria; sem a tabela (banco não migrado) o contador some em silêncio, outros erros do banco geram um aviso no log sem dados.
+
 ## Banco de dados
 
 - SQLite em `data/salesos.db` (fora do Git). A pasta é criada quando o engine é criado; se o SalesOS a cria, ela fica `0700` (POSIX).
 - Em toda conexão: permissão `0600` do arquivo (POSIX), `foreign_keys=ON`, `journal_mode=WAL`, `busy_timeout=5000`, `secure_delete=ON`. Erros do SQLAlchemy não levam os valores dos parâmetros (`hide_parameters`).
 - Tabelas da Fase 02: ver ADR `0004-modelo-clientes.md`.
-- Tabelas da Fase 03 (`oportunidades`, `movimentacoes`): ver ADR `0006-funil.md`. Depois da `0003`, backups da `0002` são recusados pelo `restore` (bloqueio B1 antes de dados reais).
+- Tabelas da Fase 03 (`oportunidades`, `movimentacoes`): ver ADR `0006-funil.md`.
+- Tabelas da Fase 04 (`tarefas`, `tarefa_eventos`): ver ADR `0007-tarefas.md`. Backups de revisões anteriores são recusados pelo `restore` sem `--migrar` e migrados com ele (B1, ADR 0005; verificado só no Linux).
 - Alembic com `render_as_batch=True` (SQLite não altera colunas em lugar). Durante a migração, a FK fica **desligada** naquela conexão (`foreign_keys_disabled`), porque o batch recria tabelas e, com FK ligada, o `DROP` apagaria linhas filhas em cascata. Antes do commit, `PRAGMA foreign_key_check` precisa estar vazio; se não estiver, a migração inteira é desfeita (`transactional_ddl=True`). Migrações nunca rodam no import nem em requisições: `uv run alembic upgrade head`.
 - Cada migração gerada passa automaticamente por `ruff check --fix` e `ruff format` (`post_write_hooks` do `alembic.ini`).
 
@@ -68,7 +76,7 @@ Comandos `uv run salesos backup | restore <arquivo> [--aceitar-reintroducao] [--
 ## Planejado (não implementado)
 
 - CPF, CNPJ e telefone: aguardam fonte oficial e aprovação (D6, D11, D12).
-- Oportunidades, tarefas, propostas, relatórios (Fases 03–06).
+- Serviços, propostas, contratos, assinaturas, dashboard e relatórios (Fases 05–06).
 - Autenticação e multiusuário: fora da primeira versão; os pontos de extensão serão registrados em ADR.
 
 Decisões: `docs/decisions/`.
