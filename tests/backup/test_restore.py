@@ -156,7 +156,7 @@ def test_backup_from_revision_0002_is_refused_after_0003(
     arquivo = criar_backup(antigo, pasta_backups)
     db = criar_banco(tmp_path / "dados" / "salesos.db", "Atual")
     antes = sha(db)
-    with pytest.raises(RestauracaoRecusada, match="revisão do esquema 0002 difere da atual 0003"):
+    with pytest.raises(RestauracaoRecusada, match="revisão do esquema 0002 difere da atual 0004"):
         restaurar(db, arquivo, pasta_backups)
     assert sha(db) == antes
     assert_original_intacto(db)

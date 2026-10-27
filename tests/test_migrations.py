@@ -26,7 +26,7 @@ def test_upgrade_check_and_downgrade(tmp_path: Path) -> None:
 
     command.upgrade(config, "head")
     with engine.connect() as conn:
-        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0003"
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0004"
 
     # Sem diferenças entre os modelos e o banco migrado (levanta exceção se houver).
     command.check(config)
@@ -134,4 +134,44 @@ def test_0003_downgrade_keeps_phase_02_data_and_upgrades_again(tmp_path: Path) -
     with engine.connect() as conn:
         assert conn.execute(text("SELECT count(*) FROM oportunidades")).scalar_one() == 0
         assert conn.execute(text("SELECT count(*) FROM clientes")).scalar_one() == 1
+    engine.dispose()
+
+
+def test_0004_downgrade_keeps_previous_data_and_upgrades_again(tmp_path: Path) -> None:
+    """upgrade → downgrade → upgrade da 0004, só em banco temporário, sem perder o que já havia."""
+    db_url = f"sqlite:///{tmp_path / 'fase04.db'}"
+    config = _alembic_config(db_url)
+    engine = create_db_engine(db_url)
+    command.upgrade(config, "0003")
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO clientes (tipo, nome, origem) "
+                "VALUES ('PJ', 'Cliente Ficticio', 'site')"
+            )
+        )
+        conn.execute(
+            text(
+                "INSERT INTO oportunidades (cliente_id, titulo, etapa) "
+                "VALUES (1, 'Projeto ficticio', 'novo_lead')"
+            )
+        )
+    command.upgrade(config, "head")
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO tarefas (cliente_id, tipo, titulo, prazo) "
+                "VALUES (1, 'ligacao', 'Ligar', '2026-11-03 13:00:00')"
+            )
+        )
+    command.downgrade(config, "0003")
+    with engine.connect() as conn:
+        tabelas = set(inspect(conn).get_table_names())
+        assert "tarefas" not in tabelas and "tarefa_eventos" not in tabelas
+        assert conn.execute(text("SELECT count(*) FROM oportunidades")).scalar_one() == 1
+        assert conn.execute(text("SELECT count(*) FROM clientes")).scalar_one() == 1
+    command.upgrade(config, "head")
+    command.check(config)
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT count(*) FROM tarefas")).scalar_one() == 0
     engine.dispose()

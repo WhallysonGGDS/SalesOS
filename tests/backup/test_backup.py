@@ -24,7 +24,7 @@ def test_backup_has_verified_manifest_without_personal_data(
     manifesto_txt = arquivo.with_name(arquivo.name + ".json").read_text(encoding="utf-8")
     manifesto = json.loads(manifesto_txt)
     assert manifesto["sha256"] == hashlib.sha256(arquivo.read_bytes()).hexdigest()
-    assert manifesto["revisao"] == "0003"
+    assert manifesto["revisao"] == "0004"
     assert SENTINELA.lower() not in manifesto_txt.lower()
     assert verificar_backup(arquivo)["sha256"] == manifesto["sha256"]
     assert nomes(arquivo) == [SENTINELA]
@@ -183,7 +183,7 @@ def test_object_hidden_behind_internal_name_is_refused(tmp_path: Path, pasta_bac
     arquivo = pasta_backups / "forjado.db"
     arquivo.write_bytes(db.read_bytes())
     sha = hashlib.sha256(arquivo.read_bytes()).hexdigest()
-    manifesto = {"sha256": sha, "revisao": "0003"}
+    manifesto = {"sha256": sha, "revisao": "0004"}
     arquivo.with_name(arquivo.name + ".json").write_text(json.dumps(manifesto), encoding="utf-8")
     with pytest.raises(BackupInvalido):
         verificar_backup(arquivo)
