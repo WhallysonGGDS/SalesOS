@@ -93,20 +93,26 @@ def abrir_leitura(caminho: Path) -> sqlite3.Connection:
 
 
 def _estrutura(conn: sqlite3.Connection) -> frozenset[tuple[Any, ...]]:
-    """Objetos do esquema (tabelas, índices, views, triggers) e as colunas de cada tabela.
+    """Objetos do esquema (tabelas, índices, views, triggers), colunas, chaves estrangeiras
+    e colunas de cada índice, tudo pelos PRAGMAs.
 
-    O texto SQL não entra: o mesmo esquema legítimo pode ter texto diferente conforme o
-    caminho de migração. Nomes `sqlite_*` também entram: um arquivo forjado com
-    `writable_schema` pode usá-los para esconder objetos.
+    O texto SQL não entra (CHECKs: decisão pendente, ADR 0005). Nomes `sqlite_*` também
+    entram: um arquivo forjado com `writable_schema` pode usá-los para esconder objetos.
     """
     itens: set[tuple[Any, ...]] = set()
     objetos = conn.execute("SELECT type, name, tbl_name FROM sqlite_master").fetchall()
     for tipo, nome, tabela in objetos:
         itens.add((tipo, nome, tabela))
+        identificador = '"' + nome.replace('"', '""') + '"'
         if tipo == "table":
-            identificador = '"' + nome.replace('"', '""') + '"'
             for coluna in conn.execute(f"PRAGMA table_xinfo({identificador})"):
                 itens.add(("coluna", nome, *coluna[1:]))
+            # Sem o id: é só a ordem interna das chaves, não a regra.
+            for chave in conn.execute(f"PRAGMA foreign_key_list({identificador})"):
+                itens.add(("fk", nome, *chave[1:]))
+        elif tipo == "index":
+            for coluna in conn.execute(f"PRAGMA index_xinfo({identificador})"):
+                itens.add(("indice_coluna", nome, *coluna))
     return frozenset(itens)
 
 

@@ -136,6 +136,11 @@ ESTRUTURAS_ESTRANHAS = {
     "view": "CREATE VIEW resumo AS SELECT nome, email FROM clientes;",
     "coluna": "ALTER TABLE clientes ADD COLUMN apelido TEXT;",
     "indice": "CREATE INDEX ix_extra ON clientes (email);",
+    # Mesmo nome, outras colunas: só a lista de colunas do índice denuncia.
+    "indice_colunas": (
+        "DROP INDEX ix_tarefas_estado_prazo; "
+        "CREATE INDEX ix_tarefas_estado_prazo ON tarefas (prazo);"
+    ),
 }
 
 
@@ -147,6 +152,44 @@ def test_backup_with_unexpected_schema_is_refused(
     db = criar_banco(tmp_path / "salesos.db", "A")
     conn = sqlite3.connect(db)
     conn.executescript(sql)
+    conn.close()
+    arquivo = criar_backup(db, pasta_backups)  # o hash bate: só a estrutura denuncia
+    with pytest.raises(BackupInvalido, match="estrutura"):
+        verificar_backup(arquivo)
+
+
+# Restrições não se alteram com ALTER TABLE no SQLite: um arquivo forjado reescreve o SQL da
+# tabela com `writable_schema`. (tabela, trecho original, trecho forjado). Os casos de CHECK
+# aguardam a decisão sobre como compará-los (ADR 0005).
+REESCRITAS = {
+    "fk_cascade": (
+        "tarefas",
+        "REFERENCES clientes (id) ON DELETE RESTRICT",
+        "REFERENCES clientes (id) ON DELETE CASCADE",
+    ),
+    "fk_removida": (
+        "tarefas",
+        ", \n\tCONSTRAINT fk_tarefas_oportunidade_id_oportunidades FOREIGN KEY(oportunidade_id) "
+        "REFERENCES oportunidades (id) ON DELETE RESTRICT",
+        "",
+    ),
+}
+
+
+@pytest.mark.parametrize("reescrita", REESCRITAS.values(), ids=REESCRITAS.keys())
+def test_backup_with_rewritten_constraints_is_refused(
+    tmp_path: Path, pasta_backups: Path, reescrita: tuple[str, str, str]
+) -> None:
+    tabela, de, para = reescrita
+    db = criar_banco(tmp_path / "salesos.db", "A")
+    conn = sqlite3.connect(db)
+    (sql,) = conn.execute("SELECT sql FROM sqlite_master WHERE name = ?", (tabela,)).fetchone()
+    assert sql.count(de) == 1  # a forja precisa acertar o texto real
+    versao = conn.execute("PRAGMA schema_version").fetchone()[0]
+    conn.execute("PRAGMA writable_schema = ON")
+    conn.execute("UPDATE sqlite_master SET sql = ? WHERE name = ?", (sql.replace(de, para), tabela))
+    conn.execute(f"PRAGMA schema_version = {versao + 1}")
+    conn.commit()
     conn.close()
     arquivo = criar_backup(db, pasta_backups)  # o hash bate: só a estrutura denuncia
     with pytest.raises(BackupInvalido, match="estrutura"):
