@@ -1,6 +1,7 @@
 import sys
 import time
 from collections.abc import Iterator
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -70,11 +71,30 @@ def migrated_engine(tmp_path: Path) -> Iterator[Engine]:
     engine.dispose()
 
 
+# Nomes que o Windows dá ao fuso de Brasília (E. South America): em português e em inglês.
+NOMES_BRASILIA = ("Brasil", "Brazil", "E. South America")
+
+
+def sistema_em_brasilia(nome: str, deslocamento: timedelta) -> bool:
+    """O fuso do sistema é o de Brasília? Pelo nome e pelo deslocamento de hoje (-03:00)."""
+    return deslocamento == timedelta(hours=-3) and any(n in nome for n in NOMES_BRASILIA)
+
+
 @pytest.fixture
 def fuso(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Fixa o fuso do processo em America/Sao_Paulo (só POSIX: o Windows não tem tzset)."""
+    """Fuso America/Sao_Paulo para os testes de dia local e de horário de verão histórico.
+
+    No POSIX, fixado no processo com `time.tzset()`. No Windows não existe `tzset`: os testes
+    usam o fuso do próprio sistema e só rodam se ele for o de Brasília (P3, E4). Se o Windows
+    não tiver as regras de 2018-2019, eles falham ali, e isso é a evidência que faltava.
+    """
     if sys.platform == "win32" or not hasattr(time, "tzset"):
-        pytest.skip("time.tzset só existe em POSIX; fuso histórico não verificado no Windows")
+        agora = datetime.now().astimezone()
+        nome, deslocamento = time.tzname[0], agora.utcoffset() or timedelta(0)
+        if not sistema_em_brasilia(nome, deslocamento):
+            pytest.skip(f"fuso do sistema não é o de Brasília ({nome}, UTC{agora:%z})")
+        yield
+        return
     monkeypatch.setenv("TZ", "America/Sao_Paulo")
     time.tzset()
     yield
