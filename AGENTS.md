@@ -14,7 +14,9 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
   - atualização do `certifi` no `uv.lock` (aviso do pip-audit, só desenvolvimento; exige autorização);
   - trava para `alembic upgrade` e para servidor iniciado fora do `salesos` (estabilização E2): resolvida e verificada só no Linux; falta o item 22 da checklist B no Windows;
   - resolvidos e verificados só no Linux na estabilização: ids enormes em `/clientes` e `/contatos` (E1, 422 em vez de 500); checagem de estrutura do backup com chaves estrangeiras, colunas dos índices e SQL completo, e dados conferidos (CHECK e chave estrangeira) na cópia privada antes da restauração (E3);
-  - fuso histórico (horário de verão antigo) não verificado no Windows (P3);
+  - fuso histórico (horário de verão antigo) não verificado no Windows (P3): os testes rodam no Windows no fuso de Brasília (E4, item 23 da checklist B);
+  - **aguarda decisão:** backup editado à mão com cliente anonimizado que ainda tem dados pessoais é aceito (achado baixo da E3);
+  - JSON padrão do 422 repete o valor enviado para quem não pede HTML (pré-existente, baixo);
   - leitor de tela e zoom real do navegador não testados;
   - Fases 05 a 08 (serviços/propostas/contratos/assinaturas, dashboard e relatórios, segurança e expansão, validação integral).
 - **Próxima etapa:** Fase 05 (serviços, propostas, contratos e assinaturas), que só começa com aprovação explícita do usuário.

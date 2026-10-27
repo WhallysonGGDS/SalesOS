@@ -1,6 +1,6 @@
 # Estabilização pós-Fase 04: plano de implementação
 
-> **Aprovado pelo usuário em 2026-10-27**, com as decisões abaixo. Criado com `superpowers:writing-plans`. Execução nativa (o agente principal implementa), com revisão de segurança independente por etapa de código, mutações e verificação completa antes de cada commit.
+> **Aprovado pelo usuário em 2026-10-27**, com as decisões abaixo. **Status: E0–E7 concluídas e verificadas no Linux** (registro em `docs/phases.md`); **E8 (Windows e leitor de tela) pendente**, executada pelo usuário. Criado com `superpowers:writing-plans`. Execução nativa (o agente principal implementa), com revisão de segurança independente por etapa de código, mutações e verificação completa antes de cada commit.
 
 **Objetivo:** resolver os defeitos de segurança, integridade e funcionamento conhecidos e preparar a validação no Windows, sem funcionalidades novas do roadmap.
 

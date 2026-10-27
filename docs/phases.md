@@ -188,9 +188,47 @@ Plano: `docs/superpowers/plans/2026-10-25-fase-04-tarefas.md`. Decisões: ADR `0
 - O contador de vencidas não usa o índice (`datetime(prazo)`); aceitável para um usuário.
 - Pré-existentes, fora do escopo: `/clientes/{id}` com id enorme → 500; a checagem de estrutura do backup não compara o texto dos CHECKs; `alembic upgrade` e servidor iniciado fora do `salesos` não pegam a trava.
 
-## Estabilização pós-Fase 04 (em andamento)
+## Estabilização pós-Fase 04 (código concluído e verificado no Linux; E8 no Windows pendente)
 
 Plano aprovado em 2026-10-27: `docs/superpowers/plans/2026-10-27-estabilizacao.md` (E0–E8). A Fase 05 não está autorizada.
+
+| Etapa | Entrega | Commit |
+|---|---|---|
+| E0 | Plano e risco B1 atualizado | `ae00d8d` |
+| E1 | Ids fora do inteiro de 64 bits → 404/422 em toda rota (inclusive `contato_id` no formulário) | `3adb82e` |
+| E2 | Trava na aplicação (vale para `uvicorn` direto) e no Alembic; levantamento prévio dos testes | `3cf9748` |
+| E3 | Estrutura do backup com chaves estrangeiras, colunas dos índices e SQL completo; dados conferidos (CHECK e chave estrangeira) na cópia privada; cabeçalho do backup | `6cd383a`, `e3d7b0f` |
+| E4 | Testes de fuso rodam no Windows no fuso de Brasília | `f192146` |
+| E5 | Política de retenção P1 e `salesos expurgar`; complemento: recusa com outros programas e não declara fim com dados no `-wal` | `289aa89`, `3b4a110` |
+| E6 | Linha do tempo paginada (F) e páginas HTML para 403, 413 e 422 (G) | `edb2e10` |
+| E7 | Documentação final | commit da E7 |
+| E8 | Checklist B no Windows (itens 1–25) e leitor de tela real | **pendente: execução pelo usuário** |
+
+| Critério de aceite | Resultado (Linux) |
+|---|---|
+| Ruff, formatação e mypy strict | Passou |
+| pytest | 659 passed, 1 skipped (teste só do Windows), 1 aviso conhecido; 660 coletados |
+| Backups legítimos de toda revisão anterior aceitos pelo `--migrar`; forjados e com dados inválidos recusados sem alterar nada | Passou (suíte e fluxo real pelo CLI) |
+| Trava: migração, restore e segundo servidor recusados com a aplicação de pé | Passou (inclusive `salesos` e `uvicorn` reais em subprocesso) |
+| Expurgo: só com confirmação, transação única, outros clientes preservados, nada automático, sem declarar fim com dados no `-wal` | Passou (inclusive fluxo real com um leitor externo) |
+| Páginas de erro sem repetir o envio; APIs sem mudança | Passou (testes e Chromium) |
+| Windows e leitor de tela | **Pendentes** |
+
+**Mutações detectadas: 43** (E1: 3; E2: 5; E3: 9; E5: 15; E6: 11). Na E4, o ramo do Windows foi simulado no Linux em três cenários (com e sem as regras de horário de verão de 2018–2019 e fora de Brasília). Dois testes que travavam ou não falhavam sob mutação foram corrigidos (paginação sem teto; título "Vencidas" já reforçado na Fase 04).
+
+**Revisões de segurança independentes (só leitura), uma por etapa de código.** Achados corrigidos:
+- **E1:** `contato_id` enorme no formulário de interação → 500.
+- **E2:** conexão da migração liberada mesmo com erro (Windows).
+- **E3:** a primeira comparação de CHECKs normalizados foi descartada (CHECK em comentário e caixa no literal passavam); **alto, pré-existente:** dados que violam CHECK passavam (o `integrity_check` só leitura não confere CHECKs); **médio, pré-existente:** chave estrangeira órfã passava; backup com cabeçalho WAL deixava `-wal`/`-shm` na pasta dos dados.
+- **E5:** teste com caminho fixo; aviso de WAL incompleto; banco ausente ou não migrado; recusa antes de apagar com outros programas abertos; diagnóstico real para outros erros do SQLite.
+- **E6:** nenhum alto ou médio.
+
+**Pendências que continuam:**
+- **Windows:** nada da estabilização foi executado no Windows (checklist B, itens 1–25); leitor de tela real não testado.
+- **Decisão do usuário (achado baixo da E3, pré-existente):** backup editado à mão com cliente marcado como anonimizado que ainda tem e-mail, documento, nome fantasia ou observações é aceito.
+- **Pré-existente (baixo):** para quem não pede HTML, o JSON padrão do 422 do FastAPI repete o valor enviado (`input`); o navegador recebe a página sem repetir.
+- `salesos backup` gera backup mesmo de um banco com dados inválidos; a recusa acontece na restauração (documentado).
+- O contador de vencidas não usa o índice (Fase 04).
 
 ## Próximas
 Fase 05 — Serviços, propostas, contratos e assinaturas: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`) e a definição P1.
