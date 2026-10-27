@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from salesos.features.oportunidades.periodo import intervalo_utc
+from salesos.periodo import intervalo_utc
 
 SP = "America/Sao_Paulo"
 

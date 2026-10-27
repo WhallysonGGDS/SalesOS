@@ -5,11 +5,14 @@ enviado), resposta 303 e datas: UTC no banco, fuso deste computador na tela.
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import Request
+from fastapi import Path, Request
 from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, ValidationError
+
+# Fora do inteiro de 64 bits do SQLite, o id viraria OverflowError (erro 500).
+IdDep = Annotated[int, Path(ge=1, le=2**63 - 1)]
 
 
 def renderizar(

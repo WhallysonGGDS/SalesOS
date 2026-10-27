@@ -8,7 +8,7 @@ from datetime import date
 from typing import Annotated, Any
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, FastAPI, Path, Query, Request
+from fastapi import APIRouter, Depends, FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
 
@@ -18,12 +18,10 @@ from salesos.features.clientes import service as clientes
 from salesos.features.oportunidades import service
 from salesos.features.oportunidades.models import ETAPAS, ETAPAS_ABERTAS, MOTIVOS_PERDA
 from salesos.features.oportunidades.schemas import FiltroFunil, MudancaEtapaIn, OportunidadeIn
-from salesos.formularios import formulario, renderizar, validar, ver
+from salesos.formularios import IdDep, formulario, renderizar, validar, ver
 
 router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
-# Fora do inteiro de 64 bits do SQLite, o id viraria OverflowError (erro 500).
-IdDep = Annotated[int, Path(ge=1, le=2**63 - 1)]
 
 CAMPOS_OPORTUNIDADE = ("titulo", "valor_centavos", "previsao_fechamento", "observacoes")
 CAMPOS_ETAPA = ("etapa", "motivo_perda", "motivo_detalhe")

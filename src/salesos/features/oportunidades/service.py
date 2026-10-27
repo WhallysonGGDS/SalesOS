@@ -25,8 +25,8 @@ from salesos.features.oportunidades.models import (
     Movimentacao,
     Oportunidade,
 )
-from salesos.features.oportunidades.periodo import intervalo_utc
 from salesos.features.oportunidades.schemas import FiltroFunil, MudancaEtapaIn, OportunidadeIn
+from salesos.periodo import intervalo_utc
 
 POR_COLUNA = 20
 POR_PAGINA = 20

@@ -17,9 +17,10 @@ src/salesos/
                 revisão, estrutura)
   restore.py    Restauração com diário de estados e recover
   migracao_backup.py  B1: `restore --migrar` migra uma cópia de backup antigo até o head
+  periodo.py    Dias locais → intervalo UTC (regras de fuso do sistema para cada data)
   dinheiro.py   Centavos inteiros: centavos() lê só formatos pt-BR (0 a 10¹²), reais() formata
   formularios.py  Auxiliares das rotas HTML: campos permitidos, validação com mensagens
-                por campo, 303 e datas locais (compartilhado pelas features)
+                por campo, 303, datas locais e IdDep (compartilhado pelas features)
   lock.py       Trava cooperativa entre processos (flock no Linux, msvcrt no Windows)
   features/clientes/
     models.py     Cliente, Contato, Interacao
@@ -29,7 +30,6 @@ src/salesos/
     router.py     Rotas finas e páginas de erro sem dados pessoais
   features/oportunidades/  (Fase 03)
     models.py     Oportunidade e Movimentacao; CHECKs de etapa, motivo, fechamento e valor
-    periodo.py    Dias locais → intervalo UTC (regras de fuso do sistema para cada data)
     schemas.py    Entrada validada: valor pt-BR, datas AAAA-MM-DD, motivo só na perda, filtros
     service.py    Regras R1–R10; operação, movimentação e evento no mesmo commit
     router.py     Rotas finas; 422 no campo para RegraViolada e filtros inválidos
