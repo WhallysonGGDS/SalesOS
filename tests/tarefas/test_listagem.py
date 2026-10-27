@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from salesos.features.clientes import service as clientes
 from salesos.features.tarefas import service
 from salesos.features.tarefas.models import Tarefa
 from salesos.features.tarefas.schemas import FiltroTarefas
@@ -130,3 +131,18 @@ def test_related_lists_show_pending_first(session: Session) -> None:
     service.concluir_tarefa(session, feita.id)
     nova_tarefa(session, cliente_id, titulo="pendente", prazo=PRAZO)
     assert _titulos(service.tarefas_do_cliente(session, cliente_id)) == ["pendente", "feita"]
+
+
+def test_anonymized_clients_leave_the_counter_and_the_agenda(session: Session) -> None:
+    # Decisão do usuário (D10): ninguém consegue fechar essas tarefas (409), então elas não
+    # contam como vencidas nem aparecem na agenda; continuam na página do cliente.
+    anonimo = novo_cliente(session, "Anonimo Ficticio")
+    nova_tarefa(session, anonimo)
+    visivel = nova_tarefa(session)
+    clientes.anonimizar_cliente(session, anonimo)
+    depois = PRAZO + UM_MINUTO
+    assert service.contar_vencidas(session, agora=depois) == 1
+    assert [t.id for t in service.tarefas_vencidas(session, agora=depois)] == [visivel.id]
+    todas = service.listar_tarefas(session, FiltroTarefas(estado="todas")).itens
+    assert [t.id for t in todas] == [visivel.id]
+    assert len(service.tarefas_do_cliente(session, anonimo)) == 1

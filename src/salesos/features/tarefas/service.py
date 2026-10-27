@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from sqlalchemy import ColumnElement, Select, case, func, select
 from sqlalchemy.orm import Session
 
+from salesos.features.clientes.models import Cliente
 from salesos.features.clientes.service import NaoEncontrado, cliente_editavel, registrar_evento
 from salesos.features.oportunidades.models import Oportunidade
 from salesos.features.tarefas.models import Tarefa, TarefaEvento
@@ -136,9 +137,16 @@ def esta_vencida(tarefa: Tarefa, agora: datetime | None = None) -> bool:
     return tarefa.estado == "pendente" and tarefa.prazo.replace(tzinfo=UTC) < agora
 
 
+def _da_agenda() -> Select[Tarefa]:
+    """Tarefas de clientes anonimizados não podem ser fechadas (409): ficam fora do contador e
+    da agenda e continuam na página do cliente (decisão do usuário sobre D10)."""
+    ativo = select(Cliente.id).where(Cliente.anonimizado_em.is_(None))
+    return select(Tarefa).where(Tarefa.cliente_id.in_(ativo))
+
+
 def _vencidas(agora: datetime | None) -> Select[Tarefa]:
     limite = _texto(agora or _agora())
-    return select(Tarefa).where(Tarefa.estado == "pendente", _prazo() < limite)
+    return _da_agenda().where(Tarefa.estado == "pendente", _prazo() < limite)
 
 
 def contar_vencidas(session: Session, agora: datetime | None = None) -> int:
@@ -152,7 +160,7 @@ def tarefas_vencidas(session: Session, agora: datetime | None = None) -> list[Ta
 
 
 def listar_tarefas(session: Session, filtro: FiltroTarefas, pagina: int = 1) -> PaginaTarefas:
-    query = select(Tarefa)
+    query = _da_agenda()
     if filtro.estado != "todas":
         query = query.where(Tarefa.estado == filtro.estado)
     if filtro.prioridade:

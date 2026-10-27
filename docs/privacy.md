@@ -46,7 +46,7 @@ O que acontece, de forma irreversível **dentro do SalesOS** (D9):
 | Eventos do sistema | ficam (não têm dados pessoais) e ganham "Cliente anonimizado" |
 | Oportunidades | título vira "Oportunidade #&lt;número&gt;"; observações e detalhe do motivo de perda apagados; **valor, etapa, motivo da lista e datas ficam** (ver pendência abaixo) |
 | Histórico de etapas | fica como está (só etapas e datas) |
-| Tarefas | título vira "Tarefa #&lt;número&gt;"; descrição apagada; **tipo, prioridade, estado, prazo e datas ficam** (ver pendência abaixo) |
+| Tarefas | título vira "Tarefa #&lt;número&gt;"; descrição apagada; **tipo, prioridade, estado, prazo e datas ficam** (ver pendência abaixo); saem da agenda e do contador de vencidas e só aparecem na página do cliente |
 | Histórico das tarefas | fica como está (só ações e datas) |
 | Busca | os dados antigos não são mais encontrados |
 | Alterações | o cliente passa a recusar qualquer mudança |
