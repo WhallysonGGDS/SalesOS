@@ -118,7 +118,7 @@ Plano: `docs/superpowers/plans/2026-10-25-fase-03-funil.md`. Decisões: ADR `000
 **Revisões:** revisão de segurança independente (só leitura) em cada etapa de código e revisão geral da fase ("Ready to proceed"). Achados corrigidos: `reais()` sem tipo e teto (médio), valor fracionário aceito pelo SQLite (médio), zero à esquerda, inteiro sem limite no schema, id enorme no caminho → 500, teste de GET sem o dump completo, motivo trocado sem efeito, contagem "20" numa coluna cheia, alvos de toque de links soltos.
 
 **Riscos e pendências que continuam:**
-- **B1:** backups da `0002` são recusados depois da `0003`; precisa existir um procedimento testado de restaurar e migrar **antes de dados reais**.
+- **B1:** backups da `0002` são recusados depois da `0003`. *Atualização:* o procedimento existe (`restore --migrar`, seção B1 abaixo), verificado **só no Linux**; a confirmação no Windows (checklist B, item 17) continua bloqueando dados reais.
 - **P1:** finalidade e prazo de retenção dos dados comerciais de clientes anonimizados (`docs/privacy.md`) bloqueiam dados reais.
 - Em `/clientes/{id}`, um id maior que o inteiro de 64 bits ainda gera erro 500 (pré-existente; fora do escopo da fase).
 - A checagem de estrutura do backup não compara o texto dos CHECKs (pré-existente, ADR 0005).
@@ -187,6 +187,10 @@ Plano: `docs/superpowers/plans/2026-10-25-fase-04-tarefas.md`. Decisões: ADR `0
 - **P1:** finalidade e prazo de retenção dos dados comerciais (agora também tipo, prioridade, estado e datas das tarefas) de clientes anonimizados bloqueiam dados reais.
 - O contador de vencidas não usa o índice (`datetime(prazo)`); aceitável para um usuário.
 - Pré-existentes, fora do escopo: `/clientes/{id}` com id enorme → 500; a checagem de estrutura do backup não compara o texto dos CHECKs; `alembic upgrade` e servidor iniciado fora do `salesos` não pegam a trava.
+
+## Estabilização pós-Fase 04 (em andamento)
+
+Plano aprovado em 2026-10-27: `docs/superpowers/plans/2026-10-27-estabilizacao.md` (E0–E8). A Fase 05 não está autorizada.
 
 ## Próximas
 Fase 05 — Serviços, propostas, contratos e assinaturas: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`) e a definição P1.
