@@ -1,7 +1,7 @@
 """G: páginas HTML para 403, 413 e 422 quando quem pede é o navegador (E6).
 
-Quem não pede HTML (APIs, scripts, `/health`) continua recebendo exatamente a resposta de
-antes: JSON no 403 e no 422, texto puro no 413. Nenhuma página repete o que foi enviado.
+Quem não pede HTML (APIs, scripts, `/health`) continua recebendo o formato de antes: JSON no
+403 e no 422 (este sem o campo `input`), texto puro no 413. Nada do que foi enviado volta.
 """
 
 from collections.abc import Iterator
@@ -63,6 +63,15 @@ def test_invalid_address_stays_json_for_other_clients(web: TestClient) -> None:
     assert resposta.status_code == 422
     assert resposta.headers["content-type"].startswith("application/json")
     assert resposta.json()["detail"][0]["loc"] == ["path", "tarefa_id"]
+
+
+def test_invalid_address_json_does_not_echo_the_sent_value(web: TestClient) -> None:
+    resposta = web.get(f"/tarefas?pagina={SENTINELA}")
+    assert resposta.status_code == 422
+    assert SENTINELA not in resposta.text
+    (erro,) = resposta.json()["detail"]
+    assert erro["loc"] == ["query", "pagina"]
+    assert erro["type"] == "int_parsing" and erro["msg"]
 
 
 def test_too_large_is_a_page_for_the_browser(web: TestClient) -> None:

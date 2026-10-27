@@ -47,7 +47,8 @@ A restauração **recusa** (sem alterar nada) quando:
 - o servidor do SalesOS ou outro programa está usando o banco;
 - o banco atual não pode ser lido (por exemplo, não foi migrado): a mensagem mostra o erro do SQLite, e o caminho é rodar `uv run alembic upgrade head` antes;
 - o backup está corrompido, sem manifesto, com SHA-256 diferente, de outra versão do esquema ou com estrutura inesperada;
-- o backup traria de volta dados de um cliente anonimizado depois dele. Se for isso mesmo, repita com `--aceitar-reintroducao`.
+- o backup traria de volta dados de um cliente anonimizado depois dele. Se for isso mesmo, repita com `--aceitar-reintroducao`;
+- o backup marca um cliente como anonimizado, mas ainda tem dados dele ("ainda com dados pessoais"). Isso só acontece com um arquivo editado à mão: não use esse backup. `--aceitar-reintroducao` não muda essa recusa.
 
 ### Backup de uma versão anterior do SalesOS
 

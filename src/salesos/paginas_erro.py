@@ -1,20 +1,19 @@
 """Páginas HTML para 403 (CSRF) e 422 (endereço inválido) quando o navegador pede HTML.
 
 Proposta G (estabilização, E6). Quem não pede HTML (`Accept` sem `text/html`: APIs, scripts)
-continua com a resposta padrão do FastAPI, em JSON. As mensagens são fixas: nenhuma página
-repete o que foi enviado. O 413 nasce fora da aplicação, em `security.LimiteCorpo`.
+continua com JSON: o 403 é o padrão do FastAPI; o 422 tem o mesmo formato, sem o campo
+`input`. As mensagens são fixas: nenhuma resposta repete o que foi enviado. O 413 nasce
+fora da aplicação, em `security.LimiteCorpo`.
 """
 
 from typing import cast
 
 from fastapi import FastAPI, Request
-from fastapi.exception_handlers import (
-    http_exception_handler,
-    request_validation_exception_handler,
-)
+from fastapi.encoders import jsonable_encoder
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 from salesos.formularios import renderizar
 from salesos.security import quer_html
@@ -37,7 +36,10 @@ async def _validacao(request: Request, excecao: Exception) -> Response:
     if quer_html(request.headers.get("accept", "")):
         mensagem = "Endereço inválido. Volte e use os links e botões das páginas."
         return _pagina(request, "Endereço inválido", mensagem, 422)
-    return await request_validation_exception_handler(request, erro)
+    # Mesmo formato do FastAPI (`loc`, `msg`, `type`, `ctx`), sem `input`: o valor enviado
+    # não volta na resposta.
+    detalhes = [{k: v for k, v in item.items() if k != "input"} for item in erro.errors()]
+    return JSONResponse(status_code=422, content={"detail": jsonable_encoder(detalhes)})
 
 
 def configurar(app: FastAPI) -> None:

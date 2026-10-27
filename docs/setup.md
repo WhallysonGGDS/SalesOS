@@ -107,8 +107,9 @@ Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/User
 
 24. (Estabilização, E5) Expurgo num banco de teste com um cliente fictício anonimizado: com o servidor ligado, `uv run salesos expurgar` é recusado ("Outro processo do SalesOS…"). Com ele desligado e a data de anonimização dentro do prazo, o comando diz "Nada a expurgar". Para ver o expurgo, use o teste automático (`uv run pytest tests/test_expurgo.py tests/test_expurgo_cli.py`); no banco de teste, responda algo diferente de `EXPURGAR 1` e confira que nada foi apagado.
 25. (Estabilização, E6) No navegador, num banco de teste: um cliente fictício com mais de 50 interações mostra **Interações mais antigas** e a página 2 chega à primeira interação; abrir `http://127.0.0.1:8000/tarefas/0` mostra a página "Endereço inválido" (não um texto em JSON); enviar um formulário depois de reiniciar o servidor sem `SALESOS_SECRET_KEY` fixo mostra a página "Formulário expirado".
+26. (Anonimização nos backups) `uv run pytest tests/backup/test_restore_anonimizados.py tests/test_paginas_erro.py` passa. Num banco de teste com um cliente fictício anonimizado, `uv run salesos backup` e `uv run salesos restore <esse backup>` restauram normalmente.
 
-Só depois disso (os itens 17 a 25 confirmam B1, a trava, os backups, o fuso, o expurgo e as telas da estabilização no Windows), e com a sua aprovação, cadastrar dados reais. A política de retenção (P1) está em `docs/privacy.md`: siga a rotina mensal de expurgo e de rotação dos backups. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
+Só depois disso (os itens 17 a 26 confirmam B1, a trava, os backups, o fuso, o expurgo, as telas da estabilização e a checagem dos clientes anonimizados no Windows), e com a sua aprovação, cadastrar dados reais. A política de retenção (P1) está em `docs/privacy.md`: siga a rotina mensal de expurgo e de rotação dos backups. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
 
 ## Limitações conhecidas
 

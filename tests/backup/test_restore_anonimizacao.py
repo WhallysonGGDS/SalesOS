@@ -31,8 +31,9 @@ def test_backup_older_than_anonymization_needs_explicit_consent(
 def _anonimizar_sql(db: Path, cliente_id: int) -> None:
     conn = sqlite3.connect(db)
     conn.execute(
+        # O mesmo que `anonimizar_cliente` grava (`busca` = search_key do nome novo).
         "UPDATE clientes SET nome = 'Cliente anonimizado #' || id, "
-        "anonimizado_em = CURRENT_TIMESTAMP WHERE id = ?",
+        "busca = 'cliente anonimizado #' || id, anonimizado_em = CURRENT_TIMESTAMP WHERE id = ?",
         (cliente_id,),
     )
     conn.commit()

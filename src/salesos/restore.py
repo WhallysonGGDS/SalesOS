@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from salesos.anonimizacao_backup import verificar_anonimizacao
 from salesos.backup import (
     BackupInvalido,
     abrir_leitura,
@@ -273,6 +274,7 @@ def restaurar(
             try:
                 verificar_backup(staging, manifesto_de=arquivo)
                 verificar_dados(staging)  # cópia privada: o backup original só é lido
+                verificar_anonimizacao(staging)  # o marcador sozinho não prova a limpeza
             except BackupInvalido as erro:
                 raise RestauracaoRecusada(f"Backup recusado: {erro}. Nada foi alterado.") from erro
             _checar_anonimizacao(db, staging, aceitar_reintroducao)

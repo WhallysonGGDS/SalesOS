@@ -58,6 +58,7 @@ No arquivo do banco, `secure_delete` zera o conteúdo apagado e um checkpoint es
 - **Não é apagamento forense.** Podem continuar existindo cópias em: backups e cópias de restauração feitos antes, Lixeira do Windows, histórico de versões do OneDrive ou de outro serviço de sincronização, cópias de sombra do Windows (Restauração do Sistema), cópias manuais e setores antigos de SSD.
 - Se um leitor estiver com o banco aberto no momento, o checkpoint do `-wal` pode ficar incompleto; o servidor registra um aviso (sem dados pessoais) e o conteúdo antigo some no próximo checkpoint completo.
 - **Restaurar um backup antigo traz os dados de volta.** Por isso a restauração recusa um backup em que um cliente hoje anonimizado ainda tinha dados, e só aceita com `--aceitar-reintroducao`. Clientes criados depois do backup não disparam esse aviso.
+- **Backup editado à mão é recusado.** Se um backup marca um cliente como anonimizado mas ainda tem dados dele (e-mail, contatos, títulos, descrições, textos de interações ou eventos fora do padrão), a restauração recusa sem alterar nada, inclusive com `--aceitar-reintroducao` e `--migrar`. A mensagem não mostra os dados (ADR 0005).
 
 ## Política de retenção após a anonimização (P1, aprovada em 2026-10-27)
 

@@ -225,10 +225,28 @@ Plano aprovado em 2026-10-27: `docs/superpowers/plans/2026-10-27-estabilizacao.m
 
 **Pendências que continuam:**
 - **Windows:** nada da estabilização foi executado no Windows (checklist B, itens 1–25); leitor de tela real não testado.
-- **Decisão do usuário (achado baixo da E3, pré-existente):** backup editado à mão com cliente marcado como anonimizado que ainda tem e-mail, documento, nome fantasia ou observações é aceito.
-- **Pré-existente (baixo):** para quem não pede HTML, o JSON padrão do 422 do FastAPI repete o valor enviado (`input`); o navegador recebe a página sem repetir.
+- Os achados "backup editado à mão com cliente anonimizado que ainda tem dados pessoais é aceito" (baixo da E3) e "JSON do 422 repete o valor enviado" foram resolvidos depois; ver a seção seguinte.
 - `salesos backup` gera backup mesmo de um banco com dados inválidos; a recusa acontece na restauração (documentado).
 - O contador de vencidas não usa o índice (Fase 04).
+
+## Anonimização nos backups e JSON do 422 (verificado no Linux, 2026-10-27)
+
+Pedido do usuário antes de qualquer liberação para dados reais. A Fase 05 continua não autorizada.
+
+- **Reprodução (antes):** num banco temporário com dados fictícios, um backup com cliente anonimizado e e-mail e observações de volta foi aceito pelo `restore`, e os dados voltaram.
+- **Correção:** `src/salesos/anonimizacao_backup.py`, chamado por `restaurar` na cópia privada, depois de `verificar_dados` e antes de qualquer mudança. Regras e limites no ADR 0005; vale para `restore`, `restore --aceitar-reintroducao` e `restore --migrar`. A mensagem diz só quantos clientes e em quais tabelas.
+- **Compatibilidade:** conferida no histórico do Git (textos dos eventos, rótulos das etapas, `search_key` e a limpeza de oportunidades e tarefas desde a criação). Um teste com histórico completo (todos os tipos de evento antes da anonimização) e outro com backup da revisão `0002` pelo `--migrar` são aceitos. Um fixture de teste antigo, que simulava a anonimização por SQL sem gravar `busca`, foi ajustado ao que o código grava de verdade.
+- **422 em JSON:** para quem não pede HTML, o corpo continua `{"detail": [...]}` com `loc`, `msg`, `type` (e `ctx` quando houver), sem o campo `input`.
+
+| Critério | Resultado (Linux) |
+|---|---|
+| Ruff, formatação e mypy strict | Passou |
+| pytest | 690 passed, 1 skipped (teste só do Windows), 1 aviso conhecido; 691 coletados |
+| 27 variantes de backup adulterado (cliente: nome, busca, e-mail, nome fantasia, documento, observações; contato; oportunidade: título, observações, detalhe do motivo; tarefa: título, descrição; interação; evento com texto livre, com campo inventado, com sufixo, com número de outro registro, com dígitos não ASCII e gravado como BLOB; datas com texto, com sufixo e numéricas em clientes, interações, oportunidades, movimentações, tarefas e histórico das tarefas) e o `--migrar` adulterado | Recusados; banco e backup com o mesmo SHA-256; sem `.staging-*`, `.migracao-*` nem diário pendente |
+| CLI real (scratchpad, dados fictícios) | `restore`, `--aceitar-reintroducao` e `--migrar` recusam o adulterado sem mudar o banco; o legítimo restaura |
+| Mutações | 25 detectadas (a chamada no `restaurar`, cada campo e tabela, a lista de eventos, a lista de campos frouxa, `match` em vez de `fullmatch`, número de outro registro, `re.ASCII`, resumo não texto, datas, só anonimizados e o `input` no 422). Duas sobreviveram na primeira rodada (`fullmatch` e o fim da expressão das datas) e ganharam variantes |
+| Revisão de segurança independente (só leitura) | **Médio:** número de evento qualquer (inclusive dígitos não ASCII) passava e aparecia na tela → corrigido (número precisa ser de um registro do cliente; só ASCII). **Baixo:** datas com texto livre → corrigido; `resumo` BLOB derrubava a restauração com `TypeError` (sem alterar nada) → corrigido; `migrado-*` fica publicado quando a restauração recusa (comportamento da B1) → documentado. **Info:** restrição para renomear colunas → documentada. Compatibilidade com o histórico conferida também pelo revisor |
+| Windows e leitor de tela | **Pendentes** (checklist B, item 26 novo) |
 
 ## Próximas
 Fase 05 — Serviços, propostas, contratos e assinaturas: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`) e a definição P1.
