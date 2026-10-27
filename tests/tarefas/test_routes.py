@@ -155,6 +155,8 @@ def test_agenda_shows_overdue_first_and_the_counter_in_text(web: TestClient) -> 
     agenda = web.get("/tarefas").text
     vencidas, _, resto = agenda.partition('id="titulo-proximas"')
     assert "Atrasada ficticia" in vencidas and ">Vencida</strong>" in vencidas
+    # Quem navega pelos links ouve também "Vencida": a linha de apoio descreve o link.
+    assert 'aria-describedby="tarefa-meta-1"' in vencidas and 'id="tarefa-meta-1"' in vencidas
     assert "Atrasada ficticia" not in resto and ">Vencida</strong>" not in resto
     assert "Futura ficticia" in resto and "Concluida ficticia" not in agenda
     # Em texto, não só um ponto colorido; aparece em qualquer página.
