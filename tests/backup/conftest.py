@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -89,3 +90,55 @@ def falhar_no_estado(monkeypatch: pytest.MonkeyPatch, alvo: str, erro: BaseExcep
             raise erro
 
     monkeypatch.setattr(restore, "_gravar_estado", gravar)
+
+
+# --- B1: backups de revisão anterior (restore --migrar) ---
+
+ANTIGO = "Qwxclienteantigo"
+
+
+def backup_antigo(base: Path, revisao: str = "0002", sql: str | None = None) -> Path:
+    """Banco fictício parado na `revisao`, com um cliente, e o backup verificado dele."""
+    db = base / f"antigo-{revisao}" / "salesos.db"
+    migrar(db, revisao)
+    conn = sqlite3.connect(db)
+    if revisao != "0001":  # a linha de base não tem tabelas de negócio
+        conn.execute(
+            "INSERT INTO clientes (tipo, nome, origem) VALUES ('PJ', ?, 'site')", (ANTIGO,)
+        )
+    if sql:
+        conn.executescript(sql)
+    conn.commit()
+    conn.close()
+    return criar_backup(db, base / f"antigo-{revisao}" / "backups")
+
+
+def escutar(caplog: pytest.LogCaptureFixture) -> None:
+    """O `migrar()` dos testes usa o alembic.ini, cujo fileConfig tira o handler do caplog."""
+    raiz = logging.getLogger()
+    if caplog.handler not in raiz.handlers:
+        raiz.addHandler(caplog.handler)
+    caplog.set_level(logging.DEBUG)
+
+
+def estado(*arquivos: Path) -> list[tuple[str, int]]:
+    return [(sha(a), a.stat().st_mtime_ns) for a in arquivos]
+
+
+def temporarios(pasta: Path) -> list[str]:
+    return sorted(p.name for p in pasta.glob(".migracao-*")) if pasta.exists() else []
+
+
+def migrados(pasta: Path) -> list[str]:
+    return sorted(p.name for p in pasta.glob("migrado-*")) if pasta.exists() else []
+
+
+@pytest.fixture
+def atual(tmp_path: Path) -> Path:
+    return criar_banco(tmp_path / "dados" / "salesos.db", "Atual")
+
+
+def alterar_bytes(arquivo: Path) -> None:
+    with arquivo.open("r+b") as f:
+        f.seek(5000)
+        f.write(b"X")
