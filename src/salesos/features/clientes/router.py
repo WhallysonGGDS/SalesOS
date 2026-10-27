@@ -21,6 +21,7 @@ from salesos.features.oportunidades import service as oportunidades
 from salesos.features.oportunidades.service import ROTULOS_ETAPAS
 from salesos.features.tarefas import service as tarefas
 from salesos.formularios import (
+    IdDep,
     data_iso,
     data_local,
     formulario,
@@ -120,14 +121,14 @@ async def criar(request: Request, session: SessionDep) -> Response:
 
 
 @router.get("/clientes/{cliente_id}/editar", response_class=HTMLResponse)
-def editar(request: Request, session: SessionDep, cliente_id: int) -> Response:
+def editar(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
     cliente = service.cliente_editavel(session, cliente_id)
     dados = {c: getattr(cliente, c) or "" for c in CAMPOS_CLIENTE}
     return _pagina(request, "clientes/form.html", {"cliente": cliente, "dados": dados, "erros": {}})
 
 
 @router.post("/clientes/{cliente_id}")
-async def atualizar(request: Request, session: SessionDep, cliente_id: int) -> Response:
+async def atualizar(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
     cliente = service.cliente_editavel(session, cliente_id)
     dados = await formulario(request, CAMPOS_CLIENTE)
     entrada = validar(ClienteIn, dados)
@@ -169,24 +170,24 @@ def _detalhe(
 
 
 @router.get("/clientes/{cliente_id}", response_class=HTMLResponse)
-def detalhe(request: Request, session: SessionDep, cliente_id: int) -> Response:
+def detalhe(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
     return _detalhe(request, session, cliente_id)
 
 
 @router.post("/clientes/{cliente_id}/arquivar")
-def arquivar(session: SessionDep, cliente_id: int) -> Response:
+def arquivar(session: SessionDep, cliente_id: IdDep) -> Response:
     service.arquivar_cliente(session, cliente_id)
     return ver(f"/clientes/{cliente_id}")
 
 
 @router.post("/clientes/{cliente_id}/desarquivar")
-def desarquivar(session: SessionDep, cliente_id: int) -> Response:
+def desarquivar(session: SessionDep, cliente_id: IdDep) -> Response:
     service.desarquivar_cliente(session, cliente_id)
     return ver(f"/clientes/{cliente_id}")
 
 
 @router.post("/clientes/{cliente_id}/anonimizar")
-async def anonimizar(request: Request, session: SessionDep, cliente_id: int) -> Response:
+async def anonimizar(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
     confirmacao = (await formulario(request, ("confirmacao",))).get("confirmacao", "")
     if confirmacao.strip() != str(cliente_id):
         mensagem = f"Para confirmar, digite o número {cliente_id}."
@@ -199,7 +200,7 @@ async def anonimizar(request: Request, session: SessionDep, cliente_id: int) -> 
 
 
 @router.post("/clientes/{cliente_id}/contatos")
-async def adicionar_contato(request: Request, session: SessionDep, cliente_id: int) -> Response:
+async def adicionar_contato(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
     service.cliente_editavel(session, cliente_id)
     dados = await formulario(request, CAMPOS_CONTATO)
     entrada = validar(ContatoIn, dados)
@@ -213,7 +214,7 @@ async def adicionar_contato(request: Request, session: SessionDep, cliente_id: i
 
 
 @router.get("/contatos/{contato_id}/editar", response_class=HTMLResponse)
-def editar_contato(request: Request, session: SessionDep, contato_id: int) -> Response:
+def editar_contato(request: Request, session: SessionDep, contato_id: IdDep) -> Response:
     contato = service.obter_contato(session, contato_id)
     dados = {c: getattr(contato, c) or "" for c in CAMPOS_CONTATO}
     contexto = {"contato": contato, "dados": dados, "erros": {}}
@@ -221,7 +222,7 @@ def editar_contato(request: Request, session: SessionDep, contato_id: int) -> Re
 
 
 @router.post("/contatos/{contato_id}")
-async def atualizar_contato(request: Request, session: SessionDep, contato_id: int) -> Response:
+async def atualizar_contato(request: Request, session: SessionDep, contato_id: IdDep) -> Response:
     contato = service.obter_contato(session, contato_id)
     dados = await formulario(request, CAMPOS_CONTATO)
     entrada = validar(ContatoIn, dados)
@@ -236,7 +237,7 @@ async def atualizar_contato(request: Request, session: SessionDep, contato_id: i
 
 
 @router.post("/contatos/{contato_id}/remover")
-def remover_contato(session: SessionDep, contato_id: int) -> Response:
+def remover_contato(session: SessionDep, contato_id: IdDep) -> Response:
     cliente_id = service.obter_contato(session, contato_id).cliente_id
     service.remover_contato(session, contato_id)
     return ver(f"/clientes/{cliente_id}#contatos")
@@ -246,7 +247,7 @@ def remover_contato(session: SessionDep, contato_id: int) -> Response:
 
 
 @router.post("/clientes/{cliente_id}/interacoes")
-async def registrar_interacao(request: Request, session: SessionDep, cliente_id: int) -> Response:
+async def registrar_interacao(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
     service.cliente_editavel(session, cliente_id)
     dados = await formulario(request, CAMPOS_INTERACAO)
     bruto: dict[str, Any] = dict(dados)

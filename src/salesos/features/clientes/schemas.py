@@ -65,7 +65,7 @@ class InteracaoIn(Entrada):
     tipo: str
     ocorrida_em: AwareDatetime
     resumo: str = Field(min_length=1, max_length=TEXTO_LONGO_MAX)
-    contato_id: int | None = None
+    contato_id: int | None = Field(default=None, ge=1, le=2**63 - 1)  # como o IdDep
 
     @field_validator("tipo")
     @classmethod
