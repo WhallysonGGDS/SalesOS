@@ -12,6 +12,7 @@ from salesos.backup import criar_backup
 from salesos.lock import Travado, caminho_trava, trava
 from salesos.restore import controle_pendente
 from tests.backup.conftest import criar_banco, nomes
+from tests.backup.test_lock import segurar_em_outro_processo
 from tests.conftest import migrar
 
 
@@ -33,7 +34,11 @@ def _rodar(monkeypatch: pytest.MonkeyPatch, *args: str) -> None:
     main.run()
 
 
-def test_server_holds_the_lock_while_running(db: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_server_command_leaves_the_lock_to_the_app(
+    db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Quem segura a trava é a inicialização da aplicação (E2): se o comando a segurasse
+    # durante o uvicorn.run, a aplicação no mesmo processo se recusaria a subir.
     vistos: list[str] = []
 
     def uvicorn_falso(*_a: Any, **k: Any) -> None:
@@ -46,9 +51,22 @@ def test_server_holds_the_lock_while_running(db: Path, monkeypatch: pytest.Monke
 
     monkeypatch.setattr("salesos.main.uvicorn.run", uvicorn_falso)
     _rodar(monkeypatch)
-    assert vistos == ["access_log=False", "travada"]
-    with trava(caminho_trava(db)):  # liberada ao encerrar
-        pass
+    assert vistos == ["access_log=False", "livre"]
+
+
+def test_server_command_refuses_when_another_process_holds_the_database(
+    db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    chamado: list[bool] = []
+    monkeypatch.setattr("salesos.main.uvicorn.run", lambda *a, **k: chamado.append(True))
+    proc = segurar_em_outro_processo(caminho_trava(db))
+    try:
+        with pytest.raises(SystemExit, match="Outro processo do SalesOS"):
+            _rodar(monkeypatch)
+    finally:
+        proc.kill()
+        proc.wait()
+    assert chamado == []
 
 
 def test_server_refuses_to_start_with_pending_restore(

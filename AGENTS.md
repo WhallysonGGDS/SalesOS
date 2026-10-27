@@ -12,7 +12,7 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
   - CPF, CNPJ e telefone (sem fonte oficial aprovada);
   - propostas F (paginação da linha do tempo) e G (páginas HTML para erros 403/413/422);
   - atualização do `certifi` no `uv.lock` (aviso do pip-audit, só desenvolvimento; exige autorização);
-  - `alembic upgrade` e servidor iniciado fora do `salesos` não pegam a trava;
+  - trava para `alembic upgrade` e para servidor iniciado fora do `salesos` (estabilização E2): resolvida e verificada só no Linux; falta o item 22 da checklist B no Windows;
   - `/clientes/{id}` com id maior que o inteiro de 64 bits gera erro 500; a checagem de estrutura do backup não compara o texto dos CHECKs;
   - fuso histórico (horário de verão antigo) não verificado no Windows (P3);
   - leitor de tela e zoom real do navegador não testados;

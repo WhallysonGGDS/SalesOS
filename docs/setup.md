@@ -102,6 +102,7 @@ Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/User
 19. (Fase 04) Tarefa com prazo um minuto no passado: aparece em "Vencidas" com a palavra **Vencida** e a navegação mostra "Tarefas, 1 vencida"; ao concluir, o contador some; reabrir volta para pendente e o histórico mostra Criada, Concluída e Reaberta.
 20. (Fase 04) Filtro de prazo por dia na agenda: uma tarefa com prazo perto da meia-noite aparece no dia local certo.
 21. (Fase 04) Narrador ou NVDA na agenda: o link de cada tarefa é lido com a linha de apoio ("Vencida, Ligação, ...").
+22. (Estabilização, E2) Com `uv run salesos` ligado num banco de teste: `uv run alembic upgrade head` é recusado ("Outro processo do SalesOS…") e a revisão não muda; num segundo terminal, `uv run uvicorn salesos.main:create_app --factory --port 8001` encerra com a mesma mensagem; `uv run salesos restore <backup>` é recusado. Depois de encerrar o servidor (Ctrl+C), `uv run alembic upgrade head` volta a funcionar. (Com o servidor ligado, também `alembic current` e `alembic history` são recusados: todo comando do Alembic que abre o banco pega a trava.)
 
 Só depois disso (o item 17 confirma B1 no Windows), **da definição de retenção (P1, `docs/privacy.md`)**, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
 

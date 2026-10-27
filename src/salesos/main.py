@@ -2,7 +2,7 @@ import argparse
 import platform
 import sqlite3
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 from importlib.metadata import version
 from pathlib import Path
 
@@ -31,11 +31,19 @@ WEB_DIR = Path(__file__).parent / "web"
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
     engine = create_db_engine(settings.database_url)
+    db = _arquivo(settings.database_url)
 
+    # A trava vale para qualquer servidor, inclusive `uvicorn` direto (E2, ADR 0005): com ela,
+    # restore, recover e `alembic upgrade` são recusados enquanto a aplicação estiver de pé.
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-        yield
-        engine.dispose()
+        try:
+            with trava(caminho_trava(db)) if db else nullcontext():
+                if db and controle_pendente(db):
+                    raise RuntimeError(PENDENTE)
+                yield
+        finally:
+            engine.dispose()
 
     # Sem /docs: a interface do Swagger carrega scripts externos, bloqueados pela CSP.
     app = FastAPI(
@@ -85,6 +93,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     return app
+
+
+def _arquivo(database_url: str) -> Path | None:
+    """Banco em arquivo (com trava); `None` para bancos que não são arquivos SQLite."""
+    try:
+        return sqlite_file(database_url)
+    except ValueError:
+        return None
 
 
 PENDENTE = "Há uma restauração inacabada. Rode `uv run salesos recover` antes de continuar."
@@ -143,17 +159,19 @@ def run() -> None:
             for residuo in relatorio.residuos:
                 print(f"Arquivo temporário residual (apague se não precisar): {residuo}")
         else:
-            # A trava fica com o servidor enquanto ele roda: restore e recover são recusados.
+            # Só para dar a mensagem antes de subir: quem segura a trava é a aplicação ao iniciar
+            # (segurá-la aqui também faria a aplicação, no mesmo processo, recusar a si mesma).
             with trava(caminho_trava(db)):
-                if controle_pendente(db):
-                    raise SystemExit(PENDENTE)
-                uvicorn.run(
-                    "salesos.main:create_app",
-                    factory=True,
-                    host=settings.host,
-                    port=settings.port,
-                    access_log=False,  # a URL da busca (?q=) traria nomes e e-mails para o log
-                )
+                pass
+            if controle_pendente(db):
+                raise SystemExit(PENDENTE)
+            uvicorn.run(
+                "salesos.main:create_app",
+                factory=True,
+                host=settings.host,
+                port=settings.port,
+                access_log=False,  # a URL da busca (?q=) traria nomes e e-mails para o log
+            )
     # OSError: arquivo inexistente, disco cheio ou arquivo em uso; o banco já foi protegido.
     # RuntimeError: recover sem banco nem cópia; sqlite3.Error: banco ilegível ou não migrado.
     except (

@@ -71,7 +71,7 @@ Rotas das tarefas (Fase 04): `GET /tarefas` (agenda em lista: vencidas da págin
 
 ## Backup, restauração e recuperação
 
-Comandos `uv run salesos backup | restore <arquivo> [--aceitar-reintroducao] [--migrar] | recover`. O servidor (`uv run salesos`) segura a trava `data/salesos.lock` enquanto roda e não inicia com uma restauração pendente. Desenho, estados e limites: ADR `0005-backup-e-restauracao.md`. Uso no Windows: `docs/onboarding.md`.
+Comandos `uv run salesos backup | restore <arquivo> [--aceitar-reintroducao] [--migrar] | recover`. A aplicação (por `uv run salesos` ou `uvicorn` direto) segura a trava `data/salesos.lock` enquanto roda e não inicia com uma restauração pendente. Desenho, estados e limites: ADR `0005-backup-e-restauracao.md`. Uso no Windows: `docs/onboarding.md`.
 
 ## Planejado (não implementado)
 

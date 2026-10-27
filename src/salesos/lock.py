@@ -1,4 +1,4 @@
-"""Trava cooperativa entre processos do SalesOS (servidor, restore e recover).
+"""Trava cooperativa entre processos do SalesOS (servidor, migração, restore e recover).
 
 Só protege contra outros processos do próprio SalesOS: programas externos não a respeitam.
 No Linux (`flock`) ela é apenas cooperativa; no Windows usa `msvcrt.locking`.
@@ -36,7 +36,8 @@ def trava(caminho: Path) -> Iterator[None]:
                 fcntl.flock(arquivo.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError as erro:
             raise Travado(
-                "Outro processo do SalesOS está usando este banco (servidor, restore ou recover)."
+                "Outro processo do SalesOS está usando este banco "
+                "(servidor, migração, restore ou recover)."
             ) from erro
         try:
             yield
