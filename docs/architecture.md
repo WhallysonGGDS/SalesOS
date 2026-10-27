@@ -16,6 +16,7 @@ src/salesos/
   backup.py     Backup verificado e verificação de um backup (integridade, SHA-256,
                 revisão, estrutura)
   restore.py    Restauração com diário de estados e recover
+  migracao_backup.py  B1: `restore --migrar` migra uma cópia de backup antigo até o head
   dinheiro.py   Centavos inteiros: centavos() lê só formatos pt-BR (0 a 10¹²), reais() formata
   formularios.py  Auxiliares das rotas HTML: campos permitidos, validação com mensagens
                 por campo, 303 e datas locais (compartilhado pelas features)
@@ -62,7 +63,7 @@ Rotas do funil (Fase 03): `GET /oportunidades` (colunas por etapa, até 20 cada;
 
 ## Backup, restauração e recuperação
 
-Comandos `uv run salesos backup | restore <arquivo> [--aceitar-reintroducao] | recover`. O servidor (`uv run salesos`) segura a trava `data/salesos.lock` enquanto roda e não inicia com uma restauração pendente. Desenho, estados e limites: ADR `0005-backup-e-restauracao.md`. Uso no Windows: `docs/onboarding.md`.
+Comandos `uv run salesos backup | restore <arquivo> [--aceitar-reintroducao] [--migrar] | recover`. O servidor (`uv run salesos`) segura a trava `data/salesos.lock` enquanto roda e não inicia com uma restauração pendente. Desenho, estados e limites: ADR `0005-backup-e-restauracao.md`. Uso no Windows: `docs/onboarding.md`.
 
 ## Planejado (não implementado)
 

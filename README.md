@@ -2,7 +2,7 @@
 
 CRM comercial próprio da WE TECH. Roda localmente, para um único usuário, sem exposição à rede.
 
-**Estado:** clientes, contatos, histórico (Fase 02) e o funil de oportunidades (Fase 03) implementados e verificados no Linux. **A validação no Windows está pendente.** Dados reais só depois da checklist de `docs/setup.md`, do procedimento de restauração de backups antigos (B1) e da definição de retenção (P1, `docs/privacy.md`). CPF, CNPJ e telefone ainda não existem (aguardam as regras oficiais). Tarefas e propostas chegam nas próximas fases (`docs/phases.md`).
+**Estado:** clientes, contatos, histórico (Fase 02) e o funil de oportunidades (Fase 03) implementados e verificados no Linux. **A validação no Windows está pendente.** Dados reais só depois da checklist de `docs/setup.md`, da confirmação no Windows da restauração de backups antigos (B1, `restore --migrar`) e da definição de retenção (P1, `docs/privacy.md`). CPF, CNPJ e telefone ainda não existem (aguardam as regras oficiais). Tarefas e propostas chegam nas próximas fases (`docs/phases.md`).
 
 ## Começar
 
@@ -21,6 +21,7 @@ Rode os comandos a partir da raiz do projeto. Passo a passo para Windows: `docs/
 ```bash
 uv run salesos backup                       # backup verificado em data/backups (servidor pode estar ligado)
 uv run salesos restore data/backups/<arquivo>.db   # com o servidor desligado
+uv run salesos restore <backup-antigo>.db --migrar  # backup de versão anterior: migra uma cópia e restaura
 uv run salesos recover                      # termina com segurança uma restauração interrompida
 ```
 

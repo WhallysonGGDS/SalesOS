@@ -16,6 +16,16 @@
 - **Recuperação** (`uv run salesos recover`): idempotente; decide olhando os arquivos reais. Antes de `verified`, volta o original e guarda o banco novo como `.failed-<data>`; depois de `verified`, mantém o restaurado. Nunca apaga.
 - O diário é conferido antes de qualquer movimentação (Fase 02.1, item E): carimbo no formato de `carimbo()`, estado conhecido, banco igual ao atual e caminhos de `staging` e `.pre-restore` iguais aos derivados do banco e do carimbo. Os caminhos usados são sempre os derivados, nunca os lidos. Diário ilegível ou adulterado → `recover` recusa sem mover nada e o diário fica pendente para análise manual.
 - O servidor não inicia com um diário pendente.
+- **Backup de revisão anterior (B1, `restore --migrar`, módulo `migracao_backup.py`):** sem a opção, a recusa por revisão diferente continua igual. Com `--migrar`:
+  1. Verifica manifesto, SHA-256 e integridade do backup; o original só é lido.
+  2. Aceita só revisões anteriores reconhecidas na cadeia do Alembic; uma desconhecida ou mais nova é recusada. Se o backup já estiver na revisão atual, restaura direto.
+  3. Copia o backup para `<pasta de backups>/.migracao-<carimbo>/` (0700, cópia 0600) e confere o SHA-256 da cópia de novo.
+  4. Roda `alembic upgrade head` **só na cópia** (`Config()` sem arquivo e URL da cópia; nunca `SALESOS_DATABASE_URL`).
+  5. Gera o backup `migrado-<carimbo>.db` e o verifica **dentro da pasta temporária** (revisão atual e estrutura); só depois o publica na pasta de backups, sem sobrescrever.
+  6. Apaga a pasta temporária ao final (sucesso ou erro) e registra um aviso se não conseguir.
+  7. Entrega o `migrado-*` ao `restaurar` de sempre, com todas as proteções (estrutura, anonimização, troca atômica, `recover`).
+  - Qualquer falha vira "Backup não migrado: ... Nada foi alterado.", sem conteúdo do banco na mensagem. O `recover` relata pastas `.migracao-*` deixadas por interrupção abrupta, sem apagá-las.
+  - Um teste percorre toda revisão anterior ao head: uma migração nova que quebre esse caminho (por exemplo, uma migração de dados que só falha com linhas antigas) faz a suíte falhar.
 
 **Invariantes:** em todo momento existe o original intacto (no lugar ou como `.pre-restore`) ou um backup de segurança verificado; toda mudança de estado vai para o disco antes da ação seguinte.
 
@@ -23,6 +33,10 @@
 - No Linux, um programa que abrir o banco **depois** da sondagem não impede a troca; ele fica com o arquivo antigo (`.pre-restore`). No Windows, a troca falha nesse caso e é desfeita (teste escrito, **não executado**: só roda no Windows).
 - A trava só coordena processos do SalesOS: DB Browser e outros programas são detectados pelo SQLite, não pela trava. `uv run alembic upgrade head` e um servidor iniciado fora do `salesos` não pegam a trava.
 - `salesos backup` não pega a trava (para funcionar com o servidor ligado) e recusa quando há restauração pendente.
-- Um backup de outra revisão do esquema é recusado; restaurar backup antigo depois de uma migração futura exigirá um procedimento próprio, a aprovar.
+- Um backup de outra revisão do esquema é recusado sem `--migrar`. Com `--migrar`, só revisões **anteriores** da cadeia são aceitas; um backup de versão mais nova do SalesOS continua recusado.
+- O `migrado-<carimbo>.db` fica na pasta de backups com os dados do backup **antigo**, mas com a data da migração no nome: na limpeza manual de dados de clientes anonimizados (`docs/privacy.md`), ele precisa ser tratado como uma cópia antiga.
+- Se a publicação do manifesto falhar (inclusive por interrupção com Ctrl+C), o `migrado-*.db` desta execução é apagado. Só uma queda de energia exatamente entre as duas operações de arquivo pode deixar um `migrado-*.db` sem manifesto, que o `restore` recusa ("manifesto ausente").
+- Durante a migração, triggers e views do backup antigo podem rodar **na cópia** (o Alembic usa o engine normal). O efeito fica na cópia, e o resultado só é aceito se a estrutura final for a esperada.
+- Validado só no Linux; no Windows, o comando entra na checklist B (`docs/setup.md`).
 - O SHA-256 detecta arquivo corrompido, não prova a origem (o manifesto não é assinado); a checagem de estrutura cobre o caso de arquivo forjado com objetos extras. CHECKs e chaves estrangeiras alterados não são comparados.
 - Backups e cópias acumulam com dados pessoais; a limpeza é manual (`docs/privacy.md`).

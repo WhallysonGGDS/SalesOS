@@ -6,17 +6,17 @@
 | `uv run ruff check .` | Lint (pyflakes, pycodestyle, isort, bugbear, pyupgrade, bandit `S`, simplify, ruff) |
 | `uv run ruff format --check .` | Formatação. `tooling/` fica excluído (cópia preservada do Toolkit) |
 | `uv run mypy` | Tipos em modo `strict` em `src`, `tests` e `migrations` |
-| `uv run pytest` | 427 testes (lista por área abaixo) |
+| `uv run pytest` | 451 testes (lista por área abaixo) |
 
 ## Resultado esperado do pytest
 
 | Sistema | Resultado normal |
 |---|---|
-| Linux (verificado no Cloud) | `426 passed, 1 skipped, 1 warning` |
-| Windows (**ainda não executado**) | `414 passed, 13 skipped, 1 warning` |
+| Linux (verificado no Cloud) | `450 passed, 1 skipped, 1 warning` |
+| Windows (**ainda não executado**; estimativa a partir dos testes pulados) | `437 passed, 14 skipped, 1 warning` |
 
 - **Skipped no Linux (1):** o teste que prova que o Windows recusa trocar o banco enquanto outro processo o mantém aberto. Só faz sentido no Windows.
-- **Skipped no Windows (13):** os 4 testes de permissões POSIX (`0600`/`0700`) e os 9 testes de período que fixam o fuso do processo com `time.tzset()` (só existe em POSIX; ADR 0006, P3). No Windows, a precisão histórica do fuso **não está verificada**.
+- **Skipped no Windows (14):** os 5 testes de permissões POSIX (`0600`/`0700`) e os 9 testes de período que fixam o fuso do processo com `time.tzset()` (só existe em POSIX; ADR 0006, P3). No Windows, a precisão histórica do fuso **não está verificada**.
 - Qualquer outro `skipped`, uma falha ou um segundo aviso é novidade e precisa ser investigado.
 
 ### O aviso conhecido
@@ -41,7 +41,7 @@ StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprec
 | Normalização e validação | `clientes/test_normalize.py`, `clientes/test_schemas.py`, `test_dinheiro.py`, `oportunidades/test_schemas.py`, `oportunidades/test_periodo.py` | 121 | e-mail, busca sem acento, escape de `LIKE`, campos bloqueados (`documento`, `telefone`) recusados, datas em UTC; dinheiro só em formatos pt-BR (sem float, sinal, notação científica); datas AAAA-MM-DD; período local → UTC com horário de verão histórico |
 | Serviço e privacidade | `clientes/test_service.py`, `clientes/test_privacy.py`, `oportunidades/test_service.py`, `test_listagem.py`, `test_privacidade.py` | 48 | duplicados, eventos só com nomes de campos, interações só de acréscimo, anonimização (inclusive bytes do `.db` e `-wal`), logs sem dados pessoais; regras R1–R10 do funil, histórico de etapas imutável, operação e evento no mesmo commit, anonimização das oportunidades (bytes do `.db`/`-wal`), filtros de período e limites |
 | Rotas e interface | `clientes/test_routes.py`, `clientes/test_routes_seguranca.py`, `clientes/test_ui.py`, `oportunidades/test_routes.py` | 62 | CSRF em todas as rotas POST, maior formulário legítimo dentro do limite do corpo, GET sem efeito colateral, XSS escapado, 303, 404/409 sem dados pessoais, rótulos, foco semântico, estados vazios |
-| Backup, restauração e trava | `backup/test_*.py` | 99 | integridade, SHA-256, revisão e estrutura do backup; backup desiste com banco bloqueado; bloqueio separado de outros erros do SQLite; restauração com falha e queda em cada estado; `recover` idempotente e recusa de diário adulterado (caminhos, carimbo, JSON); backup da revisão `0002` recusado depois da `0003` (B1); conexões concorrentes; disco cheio; trava entre processos; permissões; CLI |
+| Backup, restauração e trava | `backup/test_*.py` | 123 | integridade, SHA-256, revisão e estrutura do backup; backup desiste com banco bloqueado; bloqueio separado de outros erros do SQLite; restauração com falha e queda em cada estado; `recover` idempotente e recusa de diário adulterado (caminhos, carimbo, JSON); backup da revisão `0002` recusado depois da `0003` sem `--migrar`; `restore --migrar` (B1): seis cenários de backup antigo, falhas e interrupções injetadas, sobras relatadas pelo recover, e regressão em toda revisão anterior ao head; conexões concorrentes; disco cheio; trava entre processos; permissões; CLI |
 
 Mutações (alterar o código de propósito para ver o teste falhar) foram usadas nas proteções de privacidade, segurança, backup e restauração; os resultados estão em `docs/phases.md`.
 

@@ -8,7 +8,7 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
 
 - **Implementado:** fundação técnica (Fase 01); clientes, contatos, interações, anonimização, backup e restauração (Fase 02); hardening D, E e S2 (Fase 02.1); oportunidades e funil (Fase 03). Detalhes em `docs/architecture.md` e `docs/phases.md`.
 - **Pendente:**
-  - **bloqueiam dados reais:** validação no Windows (checklist em `docs/setup.md`); B1, procedimento testado para restaurar backups de revisões anteriores com migração (ADR 0006); P1, finalidade e prazo de retenção dos dados comerciais de clientes anonimizados e revisão da política (`docs/privacy.md`);
+  - **bloqueiam dados reais:** validação no Windows (checklist em `docs/setup.md`); B1 implementado e testado **só no Linux** (`restore --migrar`, ADR 0005); falta confirmá-lo no Windows (item 17 da checklist B); P1, finalidade e prazo de retenção dos dados comerciais de clientes anonimizados e revisão da política (`docs/privacy.md`);
   - CPF, CNPJ e telefone (sem fonte oficial aprovada);
   - propostas F (paginação da linha do tempo) e G (páginas HTML para erros 403/413/422);
   - atualização do `certifi` no `uv.lock` (aviso do pip-audit, só desenvolvimento; exige autorização);

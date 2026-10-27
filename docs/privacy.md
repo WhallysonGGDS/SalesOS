@@ -18,6 +18,7 @@ Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fases 0
 - **Banco:** `data/salesos.db` (com os arquivos `-wal` e `-shm` enquanto o servidor roda).
 - **Backups:** `data/backups/` (ou `SALESOS_BACKUP_DIR`): cada `salesos-<data>.db` é uma cópia completa do banco.
 - **Cópias de restauração:** ao restaurar, o banco anterior fica como `data/salesos.db.pre-restore-<data>` e um backup de segurança `data/backups/pre-restore-<data>.db`. Se uma restauração for desfeita, o banco que falhou fica como `data/salesos.db.failed-<data>`.
+- **Backups migrados (`restore --migrar`):** `data/backups/migrado-<data>.db` (0600 em POSIX) guarda os dados do backup **antigo** que foi migrado, mas leva a data da migração no nome. Uma pasta `data/backups/.migracao-*` só sobra se a migração for interrompida à força; ela contém uma cópia completa do backup antigo.
 - Nada disso vai para o Git (`/data/` e `*.db.*` estão no `.gitignore`).
 - O SalesOS **nunca apaga** backups nem cópias automaticamente (D7). Cada cópia guarda os dados pessoais do momento em que foi feita.
 
@@ -72,7 +73,7 @@ Até isso ser decidido pelo responsável pelo tratamento (com orientação jurí
 
 Quando um cliente pede a exclusão dos dados e você o anonimiza, os backups anteriores continuam com os dados. Procedimento manual:
 
-1. Liste os backups e cópias com data **anterior** à anonimização: `data\backups\salesos-*.db`, `data\backups\pre-restore-*.db`, `data\salesos.db.pre-restore-*` e `data\salesos.db.failed-*`, além de cópias em outros lugares (pendrive, nuvem).
+1. Liste os backups e cópias com data **anterior** à anonimização: `data\backups\salesos-*.db`, `data\backups\pre-restore-*.db`, `data\salesos.db.pre-restore-*` e `data\salesos.db.failed-*`, além de cópias em outros lugares (pendrive, nuvem). Os `data\backups\migrado-*.db` e as pastas `data\backups\.migracao-*` entram na lista **mesmo com data posterior** se vieram de um backup anterior à anonimização: a data no nome é a da migração, não a dos dados.
 2. Verifique se existe obrigação legal ou contratual de guardar alguma delas.
 3. Se não existir, apague esses arquivos (e o `.db.json` de cada backup), esvazie a Lixeira e confira as pastas sincronizadas (OneDrive guarda versões antigas).
 4. Faça um backup novo (`uv run salesos backup`) para continuar tendo uma cópia recente.

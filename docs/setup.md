@@ -70,7 +70,7 @@ Fase 01:
 
 Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/Users/<você>/AppData/Local/Temp/salesos-teste/salesos.db` e `SALESOS_BACKUP_DIR` numa pasta de teste, com dados fictícios. Ao terminar, remova essas linhas do `.env`.
 
-1. `uv run pytest`: resultado `414 passed, 13 skipped, 1 warning`. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
+1. `uv run pytest`: resultado esperado `437 passed, 14 skipped, 1 warning` (estimativa; nunca executado no Windows). O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
 2. Com o servidor ligado, `uv run salesos backup` cria o backup e o `.db.json`.
 3. Com o servidor ligado, `uv run salesos restore <backup>` é recusado ("Outro processo do SalesOS…").
 4. Servidor desligado e o banco aberto no DB Browser: o restore é recusado ("Feche os programas…") sem alterar nada.
@@ -86,8 +86,9 @@ Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/User
 14. (Fase 03) Funil com cliente fictício: criar oportunidade com valor `1.234,56`, mover entre etapas, perder com motivo, reabrir e ganhar; o histórico mostra todas as etapas, e as datas e horas aparecem no fuso do Windows.
 15. (Fase 03) Filtro de período no funil: uma oportunidade fechada perto da meia-noite aparece no dia local certo; `De` depois de `Até` mostra a mensagem no campo.
 16. (Fase 03) Seletor de data do filtro e da previsão de fechamento em pt-BR (dd/mm/aaaa).
+17. (B1) Num banco de teste parado na revisão `0002` (`uv run alembic upgrade 0002` com `SALESOS_DATABASE_URL` de teste), criar um cliente fictício e um backup; voltar o banco de teste para o head (`uv run alembic upgrade head`). `uv run salesos restore <backup>` sem a opção é recusado; com `--migrar`, restaura o cliente fictício, o backup original continua com o mesmo SHA-256 (`Get-FileHash`) e não sobra pasta `.migracao-*` em `backups\`.
 
-Só depois disso, **do procedimento de restauração de backups antigos (B1, ADR 0006) e da definição de retenção (P1, `docs/privacy.md`)**, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
+Só depois disso (o item 17 confirma B1 no Windows), **da definição de retenção (P1, `docs/privacy.md`)**, e com a sua aprovação, cadastrar dados reais. Também pendentes antes de dados reais: as fontes oficiais de CPF, CNPJ e telefone, se forem necessários.
 
 ## Limitações conhecidas
 

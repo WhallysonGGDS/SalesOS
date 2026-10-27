@@ -124,5 +124,25 @@ Plano: `docs/superpowers/plans/2026-10-25-fase-03-funil.md`. Decisões: ADR `000
 - A checagem de estrutura do backup não compara o texto dos CHECKs (pré-existente, ADR 0005).
 - Fuso histórico no Windows não verificado (P3).
 
+## B1 — Restaurar backup de revisão anterior (implementado e verificado no Linux)
+
+Plano: `docs/superpowers/plans/2026-10-27-b1-restaurar-backup-antigo.md`. Desenho e limites: ADR 0005.
+
+| Etapa | Entrega | Commit |
+|---|---|---|
+| Plano técnico | Desenho do `restore --migrar` | `0e78278` |
+| Código e testes | `migracao_backup.py`, `--migrar` no CLI, sobras no `recover` | `88011a1` |
+| Testes | Divisão de `test_restore_migracao.py` (391 linhas) | `47c20f7` |
+| Documentação | ADR 0005, onboarding, privacidade, checklist B, qualidade | commit da documentação |
+
+- **Testes:** os seis cenários de backup antigo; revisão desconhecida; `CommandError`; falha e interrupção na migração, antes da verificação e entre as publicações; pasta com `%`; limpeza que falha; sobras no `recover`; permissões; logs e saída sem dados de cliente; CLI com e sem `--migrar`; regressão em toda revisão anterior ao head.
+- Em todo cenário de falha, o banco atual e o backup original ficam com o mesmo SHA-256 (e o mesmo `mtime` do original).
+- **Mutações detectadas (14):** sem checar o SHA do original; sem conferir a cópia; migrar o original; sem limpeza; aceitar revisão desconhecida; sem verificar o migrado; deixar migrado inválido; recover sem relatar sobras; log com o nome do cliente; sem escapar `%`; `except` estreito; gerar fora da pasta temporária; sem aviso de sobra; deixar `.db` sem manifesto.
+- **Regressão demonstrada:** uma `0004` temporária (migração de dados que só falha com linhas antigas, não commitada) fez o teste da cadeia falhar em `0002` e `0003`; sem ela, passa. Entre os testes de banco novo, só `test_0003_downgrade_...`, que migra um banco com dados, também a pegou.
+- **Revisões:** duas revisões de segurança independentes (só leitura).
+  - Achado médio corrigido: `CommandError` escapava como traceback.
+  - Achados baixos corrigidos: `%` no caminho; migrado não verificado após interrupção; limpeza silenciosa no Windows; janela entre as publicações.
+- **Windows: não executado.** Os comandos de PowerShell do onboarding foram revisados, não testados.
+
 ## Próximas
 Fase 04 — Tarefas e agenda: só começa com aprovação explícita. Antes de dados reais, a checklist do Windows (`docs/setup.md`).

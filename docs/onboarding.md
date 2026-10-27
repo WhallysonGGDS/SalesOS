@@ -47,6 +47,19 @@ A restauração **recusa** (sem alterar nada) quando:
 - o backup está corrompido, sem manifesto, com SHA-256 diferente, de outra versão do esquema ou com estrutura inesperada;
 - o backup traria de volta dados de um cliente anonimizado depois dele. Se for isso mesmo, repita com `--aceitar-reintroducao`.
 
+### Backup de uma versão anterior do SalesOS
+
+Depois de uma atualização com migração (por exemplo, da Fase 02 para a Fase 03), o restore recusa backups antigos com "revisão do esquema ... difere da atual". Nesse caso, use `--migrar`. Ele migra **uma cópia** do backup para a versão atual e restaura o resultado; o backup original não é alterado:
+
+```
+uv run salesos restore data\backups\salesos-<data>.db --migrar
+```
+
+- A mensagem informa o backup migrado, que fica guardado como `data\backups\migrado-<data>.db` (com manifesto). Ele contém os dados do backup **antigo**, embora a data no nome seja a de hoje.
+- Valem as mesmas recusas acima (inclusive a de anonimização, com `--aceitar-reintroducao` se for isso mesmo).
+- Se aparecer "Backup não migrado", nada foi alterado: o backup está corrompido, é de uma versão desconhecida ou mais nova, ou a migração falhou.
+- **Este comando foi testado no Linux; no Windows ainda não.** Os comandos acima foram revisados, não executados no PowerShell.
+
 ## Se a restauração for interrompida
 
 Queda de energia ou janela fechada no meio da restauração deixam um registro pendente, e o servidor não inicia até ele ser resolvido. Rode:
@@ -55,7 +68,7 @@ Queda de energia ou janela fechada no meio da restauração deixam um registro p
 uv run salesos recover
 ```
 
-O comando termina com segurança: antes da troca concluída, volta o banco anterior (o novo fica guardado como `.failed-<data>`); depois, mantém o restaurado. Pode ser rodado mais de uma vez. Ele nunca apaga arquivos e avisa se houver sobras temporárias de backup.
+O comando termina com segurança: antes da troca concluída, volta o banco anterior (o novo fica guardado como `.failed-<data>`); depois, mantém o restaurado. Pode ser rodado mais de uma vez. Ele nunca apaga arquivos e avisa se houver sobras temporárias de backup, inclusive pastas `data\backups\.migracao-*` deixadas por um `restore --migrar` interrompido (contêm uma cópia dos dados: apague-as depois de conferir).
 
 Se o comando responder "Diário de restauração inválido", o registro pendente foi corrompido ou alterado: nada foi movido. Não apague o arquivo `data\salesos.db.restore.json` sem antes conferir a pasta `data\` (o banco atual e as cópias `.pre-restore-*`).
 
@@ -65,4 +78,4 @@ Se o comando responder "Diário de restauração inválido", o registro pendente
 uv run ruff check . ; uv run ruff format --check . ; uv run mypy ; uv run pytest
 ```
 
-No Windows, o resultado esperado do pytest é `414 passed, 13 skipped, 1 warning`: os 4 testes de permissões POSIX e os 9 de fuso com `tzset` não se aplicam ao Windows e o teste exclusivo do Windows (troca recusada com o arquivo aberto) precisa **rodar e passar**. Detalhes em `docs/quality.md`.
+No Windows, o resultado esperado do pytest é `437 passed, 14 skipped, 1 warning` (estimativa): os 5 testes de permissões POSIX e os 9 de fuso com `tzset` não se aplicam ao Windows e o teste exclusivo do Windows (troca recusada com o arquivo aberto) precisa **rodar e passar**. Detalhes em `docs/quality.md`.

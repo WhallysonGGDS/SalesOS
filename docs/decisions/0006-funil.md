@@ -30,7 +30,7 @@
 - **Responsável comercial:** fora desta versão (briefing: "futura expansão"). Ponto de extensão: uma coluna `responsavel_id` em `oportunidades`, numa migração própria, quando houver usuários (ADR futuro de autenticação).
 
 **Consequências e limites:**
-- **B1 (bloqueia dados reais):** depois da `0003`, o `salesos restore` recusa backups da `0002`, por desenho. Antes do uso real, precisa existir um procedimento testado para restaurar backups antigos e migrá-los, com verificação de integridade. Ele não faz parte da Fase 03.
+- **B1 (bloqueia dados reais):** depois da `0003`, o `salesos restore` recusa backups da `0002`, por desenho. Antes do uso real, precisa existir um procedimento testado para restaurar backups antigos e migrá-los, com verificação de integridade. Ele não fez parte da Fase 03; foi implementado depois como `salesos restore <backup> --migrar` (ADR 0005), testado só no Linux.
 - **P1 (bloqueia dados reais):** finalidade e prazo de retenção dos dados comerciais de clientes anonimizados ainda não estão definidos. Isto não é parecer jurídico.
 - **Fuso no Windows: não verificado.** Lá, a precisão histórica depende das regras de fuso do Windows usadas pelo runtime do Python; não é garantida para datas antigas com horário de verão. Os testes de horário de verão histórico mudam o fuso do processo com `time.tzset()`, que só existe em POSIX, então são pulados no Windows.
 - O funil mostra até 20 oportunidades por coluna; a lista completa é paginada (20).
