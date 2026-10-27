@@ -1,6 +1,6 @@
 # Privacidade e dados pessoais
 
-Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fases 02 e 03) e o que ele **não** consegue garantir. Não é parecer jurídico sobre a LGPD.
+Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fases 02 a 04 e estabilização) e o que ele **não** consegue garantir. Não é parecer jurídico sobre a LGPD.
 
 ## Quais dados pessoais existem
 
@@ -59,17 +59,39 @@ No arquivo do banco, `secure_delete` zera o conteúdo apagado e um checkpoint es
 - Se um leitor estiver com o banco aberto no momento, o checkpoint do `-wal` pode ficar incompleto; o servidor registra um aviso (sem dados pessoais) e o conteúdo antigo some no próximo checkpoint completo.
 - **Restaurar um backup antigo traz os dados de volta.** Por isso a restauração recusa um backup em que um cliente hoje anonimizado ainda tinha dados, e só aceita com `--aceitar-reintroducao`. Clientes criados depois do backup não disparam esse aviso.
 
-## Pendência P1 — finalidade e prazo de retenção (bloqueia dados reais)
+## Política de retenção após a anonimização (P1, aprovada em 2026-10-27)
 
-Depois de anonimizar um cliente, o SalesOS mantém valor, etapa, motivo da lista e datas das oportunidades dele, e tipo, prioridade, estado, prazo e datas das tarefas dele (D10). **Esses dados não são declarados anônimos**: continuam ligados ao registro do cliente, e a combinação com outras informações pode permitir identificá-lo.
+Definida pelo responsável pelo tratamento. Este documento descreve a política e o comportamento do software; não é parecer jurídico sobre a LGPD.
 
-Ainda não estão definidos:
+**Finalidade.** Depois de anonimizar um cliente, os registros que sobram são mantidos **só** para indicadores comerciais históricos e análise operacional interna da WE TECH. Eles **não podem** ser usados para contatar, traçar perfil ou tomar decisões sobre a pessoa.
 
-- a finalidade de manter esses dados (por exemplo, histórico comercial ou indicadores);
-- o prazo de retenção e o que acontece ao fim dele;
-- a revisão desta política com essa definição.
+**O que fica durante o prazo**, ligado ao número do cliente:
+- oportunidades: valor, etapa, motivo da lista, datas e histórico de etapas;
+- tarefas: tipo, prioridade, situação, prazo, datas e histórico de ações;
+- eventos da linha do tempo sem dados pessoais (por exemplo, "Tarefa #12 concluída").
 
-Até isso ser decidido pelo responsável pelo tratamento (com orientação jurídica, se necessário), **não use dados reais**. Este documento descreve o comportamento do software; não é parecer jurídico sobre a LGPD.
+**Esses dados não são declarados anônimos**: continuam ligados ao registro do cliente, e a combinação com outras informações pode permitir identificá-lo.
+
+**Prazo: 12 meses contados da anonimização** (data gravada em `anonimizado_em`, contada em meses do calendário; um cliente anonimizado em 29/02 entra no dia 28/02 do ano seguinte).
+
+**Expurgo: manual, pelo comando `uv run salesos expurgar`** (ADR 0008). Nada roda sozinho: nem o servidor, nem uma rota, nem uma tarefa agendada chama o expurgo.
+1. Com o servidor desligado (o comando pega a trava do banco), rode `uv run salesos expurgar`.
+2. Ele lista os clientes anonimizados há 12 meses ou mais (só o número e a data) e quantos registros de cada tipo saem.
+3. Só apaga se você digitar exatamente `EXPURGAR <quantidade>`. Qualquer outra resposta não apaga nada.
+4. Apaga, numa única transação, o cliente e **tudo** o que é dele: interações e eventos da linha do tempo, contatos, oportunidades, histórico de etapas, tarefas e histórico das tarefas. Não guarda agregados.
+5. Se algum registro de **outro** cliente apontar para um expurgado (dado inconsistente), recusa tudo e não apaga nada.
+6. Rodar de novo é seguro: o que já saiu não aparece mais.
+
+Sugestão de rotina: rodar uma vez por mês e guardar a saída do comando como registro do expurgo (ela não tem nomes).
+
+**Consequência para os indicadores:** depois do expurgo, os números históricos (por exemplo, vendas ganhas num mês antigo, quando houver dashboard na Fase 06) **diminuem**, porque os registros saem e nenhum agregado é guardado.
+
+**Backups: retenção máxima de 12 meses, com rotação manual.**
+1. Uma vez por mês, apague de `data\backups\` (e das cópias fora do computador) os backups com mais de 12 meses: `salesos-*.db`, `pre-restore-*.db` e `migrado-*.db` (pela data **dos dados**: um `migrado-*` herda a data do backup que o originou), cada um com o seu `.db.json`; e também `data\salesos.db.pre-restore-*` e `data\salesos.db.failed-*` com mais de 12 meses. Antes de apagar, garanta que exista um backup recente e verificado.
+2. **Em até 30 dias depois de cada anonimização**, tire do conjunto restaurável as cópias **anteriores** a ela que possam trazer de volta os dados pessoais (o procedimento da seção seguinte).
+3. **Se for preciso restaurar uma cópia antiga:** antes, anote os números dos clientes anonimizados (na lista de clientes arquivados, aparecem como "Cliente anonimizado #N"). Restaure com `--aceitar-reintroducao`; com o servidor de pé, anonimize de novo **cada um** desses clientes e confira que a busca pelos dados antigos não acha nada. Só então volte a usar o sistema.
+
+O SalesOS não apaga backups sozinho (D7): a rotação é feita por você.
 
 ## Backups antigos com dados de clientes anonimizados
 

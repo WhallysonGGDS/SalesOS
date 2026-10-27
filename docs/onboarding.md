@@ -73,6 +73,16 @@ O comando termina com segurança: antes da troca concluída, volta o banco anter
 
 Se o comando responder "Diário de restauração inválido", o registro pendente foi corrompido ou alterado: nada foi movido. Não apague o arquivo `data\salesos.db.restore.json` sem antes conferir a pasta `data\` (o banco atual e as cópias `.pre-restore-*`).
 
+## Expurgo mensal (retenção, P1)
+
+Clientes anonimizados há 12 meses ou mais saem do sistema por completo, só quando você mandar (`docs/privacy.md`):
+
+```
+uv run salesos expurgar
+```
+
+Com o servidor desligado. O comando mostra quais clientes (só o número) e quantos registros de cada tipo saem, e só apaga se você digitar exatamente `EXPURGAR <quantidade>`. Guarde a saída como registro. Depois, faça a rotação dos backups com mais de 12 meses (`docs/privacy.md`).
+
 ## Verificar a instalação
 
 ```

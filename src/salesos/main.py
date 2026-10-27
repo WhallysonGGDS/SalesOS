@@ -12,8 +12,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from salesos import expurgo
 from salesos.backup import BackupInvalido, criar_backup
 from salesos.config import ALLOWED_HOSTS, Settings
 from salesos.db import create_db_engine, sqlite_file
@@ -103,6 +106,44 @@ def _arquivo(database_url: str) -> Path | None:
         return None
 
 
+AVISO_EXPURGO = (
+    "Isso apaga definitivamente esses clientes e tudo o que é deles (interações, oportunidades, "
+    "histórico de etapas, tarefas e histórico das tarefas). Os indicadores históricos mudam. "
+    "Backups anteriores continuam com os dados até a rotação (docs/privacy.md)."
+)
+
+
+def _expurgar(db: Path, database_url: str) -> None:
+    """Expurgo manual (P1): mostra a abrangência e só apaga com a confirmação exata."""
+    with trava(caminho_trava(db)):  # servidor, restore e migração ficam de fora
+        if controle_pendente(db):
+            raise SystemExit(PENDENTE)
+        engine = create_db_engine(database_url)
+        try:
+            with Session(engine) as session:
+                escopo = expurgo.abrangencia(session)
+                if not escopo:
+                    print("Nenhum cliente anonimizado há 12 meses ou mais. Nada a expurgar.")
+                    return
+                print(f"Expurgo de {len(escopo)} cliente(s) anonimizado(s) há 12 meses ou mais:")
+                for item in escopo:
+                    quando = f"{item.anonimizado_em:%d/%m/%Y}"
+                    linhas = expurgo.descrever(item.linhas)
+                    print(f"  Cliente #{item.cliente_id} (anonimizado em {quando}): {linhas}")
+                print(AVISO_EXPURGO)
+                pedido = f"EXPURGAR {len(escopo)}"
+                try:
+                    resposta = input(f"Para confirmar, digite {pedido}: ")
+                except EOFError:
+                    resposta = ""
+                if resposta.strip() != pedido:
+                    raise SystemExit("Confirmação diferente. Nada foi apagado.")
+                relatorio = expurgo.expurgar(session, [item.cliente_id for item in escopo])
+                print(f"Expurgo concluído: {expurgo.descrever(relatorio)}.")
+        finally:
+            engine.dispose()
+
+
 PENDENTE = "Há uma restauração inacabada. Rode `uv run salesos recover` antes de continuar."
 
 
@@ -123,6 +164,9 @@ def _argumentos() -> argparse.Namespace:
         help="migra uma cópia de um backup de versão anterior antes de restaurar",
     )
     comandos.add_parser("recover", help="termina com segurança uma restauração interrompida")
+    comandos.add_parser(
+        "expurgar", help="apaga clientes anonimizados há 12 meses ou mais (pede confirmação)"
+    )
     return parser.parse_args()
 
 
@@ -148,6 +192,10 @@ def run() -> None:
                     print(f"Backup migrado para a versão atual: {arquivo}")
             pre = restaurar(db, arquivo, settings.backup_dir, args.aceitar_reintroducao)
             print(f"Banco restaurado. O anterior foi preservado em: {pre}")
+        elif args.comando == "expurgar":
+            if not db.exists():
+                raise SystemExit(f"Banco não encontrado: {db}")
+            _expurgar(db, settings.database_url)
         elif args.comando == "recover":
             relatorio = recuperar(db, settings.backup_dir)
             if relatorio.estado is None:
@@ -184,3 +232,7 @@ def run() -> None:
         sqlite3.Error,
     ) as erro:
         raise SystemExit(str(erro)) from erro
+    except SQLAlchemyError as erro:
+        # Só o tipo: o texto traria o SQL. Banco sem as tabelas: rode `alembic upgrade head`.
+        tipo = type(getattr(erro, "orig", None) or erro).__name__
+        raise SystemExit(f"Erro do banco ({tipo}). O banco está migrado?") from erro

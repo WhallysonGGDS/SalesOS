@@ -13,7 +13,7 @@ O proprietário da WE TECH, como único usuário na primeira versão.
 | 01 | Fundação técnica | Concluída |
 | 02 | Clientes e histórico | Implementada e verificada no Linux; validação no Windows pendente; CPF, CNPJ e telefone pendentes |
 | 03 | Oportunidades e funil | Implementada e verificada no Linux; validação no Windows pendente |
-| 04 | Tarefas e agenda | Implementada e verificada no Linux; validação no Windows, B1 no Windows e P1 bloqueiam dados reais |
+| 04 | Tarefas e agenda | Implementada e verificada no Linux; validação no Windows (inclusive B1 e o expurgo da P1) bloqueia dados reais |
 | 05 | Serviços, propostas, contratos e assinaturas | Planejada |
 | 06 | Dashboard e relatórios | Planejada |
 | 07 | Segurança e preparação para expansão | Planejada |

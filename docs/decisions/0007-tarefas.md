@@ -19,7 +19,7 @@
 - **D7, vencida:** `pendente` com `prazo` anterior ao momento atual. O prazo está em UTC, então a comparação vale para o horário local do computador. Concluídas e canceladas nunca contam. O contador é calculado a cada página (navegação e avisos); não há notificação externa nem tarefa em segundo plano.
 - **D8:** editar só enquanto `pendente`; sem exclusão (cancelar em vez de apagar). Repetir o estado atual não gera nada.
 - **D9:** a agenda é uma lista ordenada por prazo; não há calendário em grade.
-- **D10:** anonimizar o cliente apaga título e descrição das tarefas dele. Tipo, prioridade, estado e datas ficam, sob a pendência **P1** (`docs/privacy.md`); não são declarados anônimos. As tarefas dele não aceitam mais mudanças (409); por decisão do usuário em 2026-10-27, as pendentes **saem do contador de vencidas e da agenda** e continuam visíveis, só para leitura, na página do cliente. Nada é gravado nelas por causa disso.
+- **D10:** anonimizar o cliente apaga título e descrição das tarefas dele. Tipo, prioridade, estado e datas ficam, sob a política de retenção P1 (12 meses, depois expurgo manual; ADR 0008 e `docs/privacy.md`); não são declarados anônimos. As tarefas dele não aceitam mais mudanças (409); por decisão do usuário em 2026-10-27, as pendentes **saem do contador de vencidas e da agenda** e continuam visíveis, só para leitura, na página do cliente. Nada é gravado nelas por causa disso.
 - `intervalo_utc` passa a ficar em `salesos/periodo.py`, compartilhado com o funil (regras de fuso do sistema para cada data, P3 do ADR 0006), e `IdDep` em `salesos/formularios.py`.
 
 **Consequências e limites:**
