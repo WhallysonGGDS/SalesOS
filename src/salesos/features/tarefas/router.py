@@ -38,21 +38,6 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 CAMPOS_TAREFA = ("tipo", "titulo", "descricao", "prioridade", "prazo", "oportunidade_id")
 CAMPOS_FILTRO = ("estado", "prioridade", "tipo", "de", "ate")
-ROTULOS = {
-    "ligacao": "Ligação",
-    "reuniao": "Reunião",
-    "mensagem": "Mensagem",
-    "retorno": "Retorno comercial",
-    "baixa": "Baixa",
-    "normal": "Normal",
-    "alta": "Alta",
-    "pendente": "Pendente",
-    "concluida": "Concluída",
-    "cancelada": "Cancelada",
-    "todas": "Todas",
-    "criada": "Criada",
-    "reaberta": "Reaberta",
-}
 
 
 def _pagina(request: Request, nome: str, contexto: dict[str, Any], status: int = 200) -> Response:
@@ -61,7 +46,7 @@ def _pagina(request: Request, nome: str, contexto: dict[str, Any], status: int =
         "tipos": TIPOS_TAREFA,
         "prioridades": PRIORIDADES,
         "estados": (*ESTADOS, "todas"),
-        "rotulos": ROTULOS,
+        "rotulos": service.ROTULOS_TAREFAS,
     }
     return renderizar(request, nome, base | contexto, status)
 
@@ -96,7 +81,12 @@ def agenda(
     session: SessionDep,
     pagina: Annotated[int, Query(ge=1, le=100_000)] = 1,
 ) -> Response:
-    brutos = {c: v for c in CAMPOS_FILTRO if (v := request.query_params.get(c))}
+    # "pendente" é o padrão: enviado pelo formulário, não conta como filtro.
+    brutos = {
+        c: v
+        for c in CAMPOS_FILTRO
+        if (v := request.query_params.get(c)) and (c, v) != ("estado", "pendente")
+    }
     filtro = validar(FiltroTarefas, brutos)
     if not isinstance(filtro, FiltroTarefas):
         contexto: dict[str, Any] = {"filtros": brutos, "erros": filtro, "resultado": None}

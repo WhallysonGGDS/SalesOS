@@ -1,8 +1,9 @@
 {# Uma tarefa por linha: o prazo abre a linha; vencida é dita em texto, não só por cor. #}
-{% macro itens(tarefas, nomes=none) %}
+{# `ativo` falso: cliente anonimizado, tarefas só para leitura e nunca marcadas como vencidas. #}
+{% macro itens(tarefas, nomes=none, ativo=true) %}
 <ol class="tarefas">
   {% for t in tarefas %}
-  {% set vencida = t | vencida %}
+  {% set vencida = ativo and t | vencida %}
   <li class="tarefa">
     <time class="tarefa-prazo" datetime="{{ t.prazo | data_iso }}">{{ t.prazo | data_local }}</time>
     <a class="tarefa-titulo" href="/tarefas/{{ t.id }}" aria-describedby="tarefa-meta-{{ t.id }}">{{ t.titulo }}</a>
@@ -25,8 +26,10 @@
     <h2 id="titulo-tarefas">Tarefas</h2>
     {% if pode_criar %}<a class="botao" href="{{ nova }}">Nova tarefa</a>{% endif %}
   </div>
+  {% set n = (tarefas | map("vencida") | select | list | length) if pode_criar else 0 %}
+  {% if n %}<p><strong>{{ n }} {{ "tarefa vencida" if n == 1 else "tarefas vencidas" }}</strong></p>{% endif %}
   {% if tarefas %}
-  {{ itens(tarefas) }}
+  {{ itens(tarefas, ativo=pode_criar) }}
   {% if tarefas | length >= maximo %}<p class="dica">Mostrando as {{ maximo }} primeiras, pendentes antes.</p>{% endif %}
   {% else %}
   <p class="vazio-linha">Nenhuma tarefa por aqui.</p>

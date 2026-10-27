@@ -22,6 +22,22 @@ from salesos.periodo import intervalo_utc
 POR_PAGINA = 20
 RELACIONADAS_MAX = 50
 EVENTOS_MAX = 200
+# Rótulos das telas (tipos, prioridades, estados e ações do histórico).
+ROTULOS_TAREFAS = {
+    "ligacao": "Ligação",
+    "reuniao": "Reunião",
+    "mensagem": "Mensagem",
+    "retorno": "Retorno comercial",
+    "baixa": "Baixa",
+    "normal": "Normal",
+    "alta": "Alta",
+    "pendente": "Pendente",
+    "concluida": "Concluída",
+    "cancelada": "Cancelada",
+    "todas": "Todas",
+    "criada": "Criada",
+    "reaberta": "Reaberta",
+}
 ACAO_NO_EVENTO = {"concluida": "concluída", "cancelada": "cancelada", "pendente": "reaberta"}
 
 

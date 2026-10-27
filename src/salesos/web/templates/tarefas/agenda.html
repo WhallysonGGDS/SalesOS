@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
 {% from "tarefas/_itens.html" import itens with context %}
-{% block title %}Agenda · SalesOS{% endblock %}
+{% block title %}Tarefas · SalesOS{% endblock %}
 {% block content %}
-<h1 class="titulo">Agenda</h1>
+<h1 class="titulo">Tarefas</h1>
 
 {# Fechado por padrão: a agenda é o principal da página, sobretudo no celular. #}
 <details class="filtros-caixa"{% if filtros or erros %} open{% endif %}>

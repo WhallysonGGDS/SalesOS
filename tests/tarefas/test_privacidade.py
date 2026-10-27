@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from salesos.features.tarefas.schemas import TarefaIn
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
@@ -10,6 +9,7 @@ from salesos.features.clientes import service as clientes
 from salesos.features.clientes.models import Interacao
 from salesos.features.tarefas import service
 from salesos.features.tarefas.models import Tarefa, TarefaEvento
+from salesos.features.tarefas.schemas import TarefaIn
 from tests.tarefas.conftest import PRAZO, nova_tarefa
 
 TITULO = "Qwxtarefasentinela"

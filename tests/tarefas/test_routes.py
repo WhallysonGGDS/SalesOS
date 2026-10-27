@@ -267,3 +267,31 @@ def test_home_still_renders_before_migrations(
     resposta = client.get("/")
     assert resposta.status_code == 200 and "vencida" not in resposta.text
     assert not [r for r in caplog.records if r.levelno >= logging.WARNING]  # sem tabela: silêncio
+
+
+def test_client_and_opportunity_pages_warn_about_overdue_tasks(web: TestClient) -> None:
+    # D7: aviso na página do cliente e da oportunidade, em texto.
+    cliente_id = _cliente(web)
+    oportunidade_id = _oportunidade(web, cliente_id)
+    _tarefa(web, cliente_id, prazo=PASSADO, oportunidade_id=str(oportunidade_id))
+    assert "1 tarefa vencida" in web.get(f"/clientes/{cliente_id}").text
+    assert "1 tarefa vencida" in web.get(f"/oportunidades/{oportunidade_id}").text
+    _tarefa(web, cliente_id, prazo=PASSADO)
+    assert "2 tarefas vencidas" in web.get(f"/clientes/{cliente_id}").text
+
+
+def test_anonymized_client_tasks_are_not_shown_as_overdue(web: TestClient) -> None:
+    # Ninguém consegue fechá-las (409): "Vencida" para sempre só confundiria.
+    cliente_id = _cliente(web)
+    tarefa_id = _tarefa(web, cliente_id, prazo=PASSADO)
+    _post(web, f"/clientes/{cliente_id}/anonimizar", confirmacao=str(cliente_id))
+    for url in (f"/clientes/{cliente_id}", f"/tarefas/{tarefa_id}"):
+        texto = web.get(url).text
+        assert "Vencida" not in texto and "tarefa vencida" not in texto, url
+    assert "Pendente" in web.get(f"/tarefas/{tarefa_id}").text
+
+
+def test_submitting_the_default_filters_is_the_plain_agenda(web: TestClient) -> None:
+    padrao = web.get("/tarefas", params={"estado": "pendente", "tipo": "", "de": ""}).text
+    assert "Limpar filtros" not in padrao and '<details class="filtros-caixa">' in padrao
+    assert '<h1 class="titulo">Tarefas</h1>' in padrao

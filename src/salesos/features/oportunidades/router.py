@@ -19,7 +19,6 @@ from salesos.features.oportunidades import service
 from salesos.features.oportunidades.models import ETAPAS, ETAPAS_ABERTAS, MOTIVOS_PERDA
 from salesos.features.oportunidades.schemas import FiltroFunil, MudancaEtapaIn, OportunidadeIn
 from salesos.features.tarefas import service as tarefas
-from salesos.features.tarefas.router import ROTULOS as ROTULOS_TAREFAS
 from salesos.formularios import IdDep, RegraViolada, formulario, renderizar, validar, ver
 
 router = APIRouter()
@@ -44,7 +43,7 @@ def _pagina(request: Request, nome: str, contexto: dict[str, Any], status: int =
         "etapas": ETAPAS,
         "etapas_abertas": ETAPAS_ABERTAS,
         "motivos": MOTIVOS_PERDA,
-        "rotulos": ROTULOS_TAREFAS | service.ROTULOS_ETAPAS | ROTULOS_MOTIVOS | SITUACOES,
+        "rotulos": tarefas.ROTULOS_TAREFAS | service.ROTULOS_ETAPAS | ROTULOS_MOTIVOS | SITUACOES,
         "situacoes": SITUACOES,
     }
     return renderizar(request, nome, base | contexto, status)

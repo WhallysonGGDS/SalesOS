@@ -12,7 +12,7 @@
 {% if erros.get("geral") %}<p class="aviso-erro" role="alert">{{ erros.geral }}</p>{% endif %}
 
 <dl class="ficha">
-  <div><dt>Situação</dt><dd class="etapa-atual">{% if tarefa | vencida %}Vencida{% else %}{{ rotulos[tarefa.estado] }}{% endif %}</dd></div>
+  <div><dt>Situação</dt><dd class="etapa-atual">{% if tarefa | vencida and not anonimizado %}Vencida{% else %}{{ rotulos[tarefa.estado] }}{% endif %}</dd></div>
   <div><dt>Prazo</dt><dd><time datetime="{{ tarefa.prazo | data_iso }}">{{ tarefa.prazo | data_local }}</time></dd></div>
   <div><dt>Tipo</dt><dd>{{ rotulos[tarefa.tipo] }}</dd></div>
   <div><dt>Prioridade</dt><dd>{{ rotulos[tarefa.prioridade] }}</dd></div>
