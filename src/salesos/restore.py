@@ -29,6 +29,7 @@ from salesos.backup import (
     criar_backup,
     sincronizar,
     verificar_backup,
+    verificar_dados,
 )
 from salesos.db import restringir
 from salesos.lock import caminho_trava, trava
@@ -271,6 +272,7 @@ def restaurar(
             _copiar(arquivo, staging)
             try:
                 verificar_backup(staging, manifesto_de=arquivo)
+                verificar_dados(staging)  # cópia privada: o backup original só é lido
             except BackupInvalido as erro:
                 raise RestauracaoRecusada(f"Backup recusado: {erro}. Nada foi alterado.") from erro
             _checar_anonimizacao(db, staging, aceitar_reintroducao)

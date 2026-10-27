@@ -137,6 +137,11 @@ ESTRUTURAS_ESTRANHAS = {
     "coluna": "ALTER TABLE clientes ADD COLUMN apelido TEXT;",
     "indice": "CREATE INDEX ix_extra ON clientes (email);",
     # Mesmo nome, outras colunas: só a lista de colunas do índice denuncia.
+    # Mesmo nome e mesmas colunas, mas parcial: só o SQL do índice denuncia.
+    "indice_parcial": (
+        "DROP INDEX ix_tarefas_estado_prazo; CREATE INDEX ix_tarefas_estado_prazo "
+        "ON tarefas (estado, prazo) WHERE estado = 'pendente';"
+    ),
     "indice_colunas": (
         "DROP INDEX ix_tarefas_estado_prazo; "
         "CREATE INDEX ix_tarefas_estado_prazo ON tarefas (prazo);"
@@ -159,9 +164,34 @@ def test_backup_with_unexpected_schema_is_refused(
 
 
 # Restrições não se alteram com ALTER TABLE no SQLite: um arquivo forjado reescreve o SQL da
-# tabela com `writable_schema`. (tabela, trecho original, trecho forjado). Os casos de CHECK
-# aguardam a decisão sobre como compará-los (ADR 0005).
+# tabela com `writable_schema`. (tabela, trecho original, trecho forjado)
+CK_ESTADO = "CONSTRAINT ck_tarefas_estado CHECK (estado IN ('pendente', 'concluida', 'cancelada'))"
 REESCRITAS = {
+    "check_removido": ("tarefas", CK_ESTADO + ", ", ""),
+    "check_enfraquecido": (
+        "tarefas",
+        "estado IN ('pendente', 'concluida', 'cancelada')",
+        "estado IS NOT NULL",
+    ),
+    "check_aninhado_enfraquecido": (
+        "tarefas",
+        "((estado = 'cancelada') = (cancelada_em IS NOT NULL))",
+        "((estado = 'cancelada') OR (cancelada_em IS NOT NULL))",
+    ),
+    "check_sem_nome": ("tarefas", "CONSTRAINT ck_tarefas_tipo CHECK (", "CHECK ("),
+    # Achados da revisão de segurança: o CHECK continua no texto, mas não vale mais.
+    "check_em_comentario": ("tarefas", CK_ESTADO + ", ", "/* " + CK_ESTADO + ", */ "),
+    "check_caixa_no_literal": ("tarefas", "'pendente', 'concluida'", "'PENDENTE', 'concluida'"),
+    "collate_nocase": (
+        "tarefas",
+        "tipo VARCHAR(10) NOT NULL",
+        "tipo VARCHAR(10) COLLATE NOCASE NOT NULL",
+    ),
+    "on_conflict_replace": (
+        "tarefas",
+        "CONSTRAINT pk_tarefas PRIMARY KEY (id)",
+        "CONSTRAINT pk_tarefas PRIMARY KEY (id) ON CONFLICT REPLACE",
+    ),
     "fk_cascade": (
         "tarefas",
         "REFERENCES clientes (id) ON DELETE RESTRICT",

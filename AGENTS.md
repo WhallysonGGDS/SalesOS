@@ -13,8 +13,7 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
   - propostas F (paginação da linha do tempo) e G (páginas HTML para erros 403/413/422);
   - atualização do `certifi` no `uv.lock` (aviso do pip-audit, só desenvolvimento; exige autorização);
   - trava para `alembic upgrade` e para servidor iniciado fora do `salesos` (estabilização E2): resolvida e verificada só no Linux; falta o item 22 da checklist B no Windows;
-  - resolvidos e verificados só no Linux na estabilização: ids enormes em `/clientes` e `/contatos` (E1, 422 em vez de 500); chaves estrangeiras e colunas dos índices na checagem de estrutura do backup (E3, parte 1);
-  - **em aberto (E3), aguardam decisão:** CHECKs reescritos não são comparados; backup com dados que violam CHECK ou chave estrangeira é aceito (ADR 0005);
+  - resolvidos e verificados só no Linux na estabilização: ids enormes em `/clientes` e `/contatos` (E1, 422 em vez de 500); checagem de estrutura do backup com chaves estrangeiras, colunas dos índices e SQL completo, e dados conferidos (CHECK e chave estrangeira) na cópia privada antes da restauração (E3);
   - fuso histórico (horário de verão antigo) não verificado no Windows (P3);
   - leitor de tela e zoom real do navegador não testados;
   - Fases 05 a 08 (serviços/propostas/contratos/assinaturas, dashboard e relatórios, segurança e expansão, validação integral).

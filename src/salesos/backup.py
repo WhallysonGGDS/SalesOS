@@ -93,16 +93,20 @@ def abrir_leitura(caminho: Path) -> sqlite3.Connection:
 
 
 def _estrutura(conn: sqlite3.Connection) -> frozenset[tuple[Any, ...]]:
-    """Objetos do esquema (tabelas, índices, views, triggers), colunas, chaves estrangeiras
-    e colunas de cada índice, tudo pelos PRAGMAs.
+    """Objetos do esquema (tabelas, índices, views, triggers), colunas, chaves estrangeiras,
+    colunas de cada índice e o SQL completo de cada objeto, sem normalização.
 
-    O texto SQL não entra (CHECKs: decisão pendente, ADR 0005). Nomes `sqlite_*` também
-    entram: um arquivo forjado com `writable_schema` pode usá-los para esconder objetos.
+    O SQL cobre o que os PRAGMAs não mostram: CHECKs (inclusive escondidos em comentários),
+    COLLATE e ON CONFLICT. A sondagem da estabilização (E3) mostrou esse texto idêntico num
+    banco criado do zero, num migrado em cadeia desde a 0002 e num migrado pelo
+    `restore --migrar`. Nomes `sqlite_*` também entram: um arquivo forjado com
+    `writable_schema` pode usá-los para esconder objetos.
     """
     itens: set[tuple[Any, ...]] = set()
-    objetos = conn.execute("SELECT type, name, tbl_name FROM sqlite_master").fetchall()
-    for tipo, nome, tabela in objetos:
+    objetos = conn.execute("SELECT type, name, tbl_name, sql FROM sqlite_master").fetchall()
+    for tipo, nome, tabela, sql in objetos:
         itens.add((tipo, nome, tabela))
+        itens.add(("sql", nome, sql))  # todos os tipos: views e triggers também
         identificador = '"' + nome.replace('"', '""') + '"'
         if tipo == "table":
             for coluna in conn.execute(f"PRAGMA table_xinfo({identificador})"):
@@ -130,6 +134,27 @@ def estrutura_esperada() -> frozenset[tuple[Any, ...]]:
             return _estrutura(conn)
         finally:
             conn.close()
+
+
+def verificar_dados(caminho: Path) -> None:
+    """Recusa dados que violam um CHECK ou uma chave estrangeira (E3, ADR 0005).
+
+    Em modo só leitura, o `integrity_check` do SQLite não confere CHECKs; por isso a conexão
+    é de escrita, mas com `query_only`: o arquivo não muda um byte. Use numa cópia privada.
+    """
+    try:
+        conn = sqlite3.connect(f"{caminho.resolve().as_uri()}?mode=rw", uri=True)
+        try:
+            conn.execute("PRAGMA trusted_schema=OFF")
+            conn.execute("PRAGMA query_only=ON")
+            if conn.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
+                raise BackupInvalido("dados que violam um CHECK do banco")
+            if conn.execute("PRAGMA foreign_key_check").fetchone() is not None:
+                raise BackupInvalido("dados com chave estrangeira órfã")
+        finally:
+            conn.close()
+    except sqlite3.DatabaseError as erro:
+        raise BackupInvalido(f"falha ao conferir os dados ({type(erro).__name__})") from erro
 
 
 def verificar_integridade(caminho: Path) -> str:
@@ -235,6 +260,12 @@ def verificar_backup(
         raise BackupInvalido("manifesto do backup ilegível") from erro
     if not isinstance(dados, dict) or sha256_arquivo(arquivo) != dados.get("sha256"):
         raise BackupInvalido("SHA-256 do arquivo diverge do manifesto")
+    # Antes de o SQLite abrir: `criar_backup` grava em modo DELETE (bytes 18 e 19 = 1). Com
+    # cabeçalho WAL, abrir o arquivo criaria `-wal`/`-shm` ao lado dele (na pasta dos dados).
+    with arquivo.open("rb") as entrada:
+        cabecalho = entrada.read(20)
+    if cabecalho.startswith(b"SQLite format 3\x00") and cabecalho[18:20] != b"\x01\x01":
+        raise BackupInvalido("modo de diário do backup inesperado")
     revisao = verificar_integridade(arquivo)
     if exigir_revisao:
         if revisao != revisao_atual():
