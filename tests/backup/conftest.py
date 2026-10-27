@@ -109,7 +109,8 @@ def backup_antigo(base: Path, revisao: str = "0002", sql: str | None = None) -> 
     tabelas = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
     if "oportunidades" in tabelas:  # da Fase 03 em diante: dados também nas tabelas novas
         conn.execute(
-            "INSERT INTO oportunidades (cliente_id, titulo, etapa) VALUES (1, 'Projeto', 'novo_lead')"
+            "INSERT INTO oportunidades (cliente_id, titulo, etapa) "
+            "VALUES (1, 'Projeto', 'novo_lead')"
         )
     if sql:
         conn.executescript(sql)
