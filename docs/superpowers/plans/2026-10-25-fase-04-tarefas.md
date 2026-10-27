@@ -1,6 +1,6 @@
 # Fase 04 — Tarefas e follow-ups: plano de implementação
 
-> **PROPOSTA — aguardando aprovação explícita do usuário.** Nada deste plano foi implementado.
+> **VERSÃO FINAL — D1–D10 aprovadas pelo usuário em 2026-10-27, sem mudança de escopo.** B1 já foi implementado (pré-requisito pedido pelo usuário). Implementação ainda não iniciada.
 > Criado com `superpowers:writing-plans`. Execução proposta: nativa (o agente principal implementa), com revisão de segurança independente por etapa de código e revisão geral no fim, como nas Fases 02.1 e 03.
 
 **Objetivo:** registrar tarefas comerciais com prazo, prioridade e situação, mostrar o que está vencido e guardar o histórico de conclusão, sem enviar nada para fora do computador.
@@ -35,9 +35,18 @@ O briefing **não** diz:
 
 Essas são as decisões D1 a D10 abaixo. Nenhuma foi tomada por conta própria.
 
-## Decisões que precisam de aprovação
+## Decisões aprovadas (2026-10-27)
 
-| # | Pergunta | Proposta | Alternativas |
+Todas as propostas abaixo foram aprovadas como estão. Esclarecimentos do usuário, que valem como regra:
+
+- **Vencida:** tarefa `pendente` cujo prazo já passou no horário local aplicável. Concluídas e canceladas nunca entram no contador.
+- **Reabrir** uma tarefa concluída ou cancelada muda o estado para `pendente`, limpa `concluida_em` ou `cancelada_em` e preserva todos os eventos anteriores. É uma ação explícita e registrada (`tarefa_eventos` e linha do tempo do cliente).
+- **D6:** o evento vai na mesma transação da operação e não leva texto livre.
+- **D7:** sem notificações externas.
+- **D10:** P1 continua como bloqueio explícito para dados reais; os dados restantes não são declarados anônimos.
+
+
+| # | Pergunta | Decisão aprovada | Alternativas descartadas |
 |---|---|---|---|
 | D1 | A que a tarefa se liga? | Sempre a um **cliente** (obrigatório) e, opcionalmente, a uma **oportunidade desse mesmo cliente**. Proposta minha: o briefing não define o vínculo. | Tarefas avulsas, sem cliente; só cliente, sem oportunidade |
 | D2 | Tipos | `ligacao`, `reuniao`, `mensagem`, `retorno` (os quatro do briefing) | Acrescentar `outro` (sugestão, fora do briefing) |
@@ -58,7 +67,7 @@ Essas são as decisões D1 a D10 abaixo. Nenhuma foi tomada por conta própria.
 - Gerar uma interação automaticamente ao concluir uma ligação ou reunião: **sugestão** (ver abaixo), fora do briefing.
 - F, G, CPF/CNPJ/telefone, `certifi`, B1 e P1: fora do escopo desta fase.
 
-## Sugestões de melhoria (não incluídas; cada uma exige aprovação própria)
+## Sugestões de melhoria (fora do escopo por decisão do usuário: S-a, S-b e S-c não entram)
 
 - **S-a:** ao concluir uma tarefa do tipo ligação ou reunião, oferecer o registro de uma interação na linha do tempo com o resumo.
 - **S-b:** tipo `outro`.
@@ -145,14 +154,14 @@ Cada etapa termina com a verificação completa e, depois da aprovação, commit
 
 ### Etapa 1 — Compartilhar período e `IdDep` (estimativa: 1 h)
 - Mover `intervalo_utc` para `src/salesos/periodo.py` e `IdDep` para `src/salesos/formularios.py`, sem mudar comportamento.
-- Aceite: os mesmos 427 testes coletados antes e depois (comparação de IDs); funil intacto.
+- Aceite: os mesmos testes coletados antes e depois (comparação de IDs; 451 hoje); funil intacto.
 
 ### Etapa 2 — Modelo e migração 0004 (estimativa: 2 h)
 - Testes com SQL direto, sempre em banco temporário:
   - cada CHECK (estado e datas coerentes; tipo, prioridade e estado fora da lista);
   - FKs `RESTRICT` (não apagar cliente, oportunidade ou tarefa com eventos);
   - `upgrade` → `alembic check` → `downgrade 0003` → `upgrade` de novo, preservando clientes e oportunidades;
-  - backup da `0003` recusado depois da `0004` (B1, por desenho);
+  - backup da `0003` recusado **sem** `--migrar` depois da `0004`, e restaurado **com** `--migrar` (regressão de B1, já automática);
   - backup novo aprovado pela checagem de estrutura.
 - Aceite: testes passando; mutação de pelo menos um CHECK detectada.
 
@@ -226,7 +235,7 @@ Cada etapa termina com a verificação completa e, depois da aprovação, commit
 
 ## Riscos
 
-- **B1 cresce a cada migração:** depois da `0004`, backups da `0003` também são recusados. Sem dados reais isso não afeta ninguém hoje, mas cada fase com migração aumenta o custo de chegar a B1. Ver a decisão "Ordem de B1" abaixo.
+- **B1 e a migração `0004`:** B1 já existe (`restore --migrar`). O teste de regressão da cadeia (`test_every_previous_revision_can_be_migrated_and_restored`) passa a incluir a `0003` automaticamente quando a `0004` existir. Se a `0004` quebrar a restauração de backups antigos (por exemplo, uma migração de dados que falha com linhas antigas), a suíte falha. Critério de aceite da Etapa 2: esse teste passando com a `0004`.
 - **Fuso:**
   - o prazo com hora e o "vencida" dependem do relógio e do fuso do computador;
   - no Windows, a precisão histórica (P3) continua não verificada;
@@ -234,13 +243,9 @@ Cada etapa termina com a verificação completa e, depois da aprovação, commit
 - **Escopo:** pressão para lembretes, recorrência e calendário em grade. Ficam fora sem nova aprovação.
 - **Tamanho de arquivo:** `clientes/router.py` e `clientes/detalhe.html` crescem com mais uma seção; a Etapa 4 prevê dividir se for preciso.
 
-## Ordem de B1 (decisão sua, separada da Fase 04)
+## Ordem de B1
 
-B1 bloqueia **dados reais**, não o desenvolvimento. Opções:
-- **(a)** Seguir com a Fase 04 agora e fazer B1 antes do primeiro uso real (o procedimento vai precisar migrar 0002 → 0003 → 0004).
-- **(b)** Fazer B1 antes da Fase 04, como um retrofit curto, para que toda migração nova já nasça com o caminho de restauração testado.
-
-Recomendação: **(b)** se a intenção é começar a usar com dados reais logo depois da Fase 04; **(a)** se ainda faltam outras fases antes do uso real.
+Decidida pelo usuário: B1 antes da Fase 04. Concluído no Linux (commits `0e78278`, `88011a1`, `47c20f7`, `58c87b4`); a confirmação no Windows está no item 17 da checklist B.
 
 ## Backlog de defeitos antigos (fora do escopo; impacto avaliado)
 
