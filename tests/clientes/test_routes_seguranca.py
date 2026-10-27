@@ -46,8 +46,9 @@ def test_every_post_route_requires_csrf(
 def test_get_routes_have_no_side_effects(
     web: TestClient, web_app: FastAPI, db: Path, com_dados: tuple[int, int]
 ) -> None:
-    # Rotas do funil precisam de ids de oportunidade: ver tests/oportunidades/test_routes.py.
-    urls = [u for u in _urls(web_app, "GET", *com_dados) if not u.startswith("/oportunidades")]
+    # Funil e tarefas precisam dos próprios ids: ver tests/oportunidades e tests/tarefas.
+    proprias = ("/oportunidades", "/tarefas")
+    urls = [u for u in _urls(web_app, "GET", *com_dados) if not u.startswith(proprias)]
     assert len(urls) >= 5
     antes = _dump(db)
     for url in urls:

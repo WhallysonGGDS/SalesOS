@@ -3,6 +3,7 @@
 Estado, datas de conclusão e cliente nunca vêm do formulário: só o serviço os define.
 """
 
+import re
 from datetime import UTC, date, datetime
 from typing import Any, Literal
 
@@ -12,6 +13,9 @@ from salesos.features.clientes.schemas import TEXTO_LONGO_MAX, Entrada, um_de
 from salesos.features.tarefas.models import PRIORIDADES, TIPOS_TAREFA
 from salesos.formularios import Mensagem
 from salesos.periodo import data_do_formulario
+
+# Data e hora por extenso; sem isto o Pydantic leria "1700000000" como timestamp Unix.
+_DATA_HORA = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[T ][0-9]{2}:[0-9]{2}")
 
 
 class TarefaIn(Entrada):
@@ -32,11 +36,23 @@ class TarefaIn(Entrada):
     def _prioridade(cls, value: str) -> str:
         return um_de(PRIORIDADES, value)
 
+    @field_validator("prazo", mode="before")
+    @classmethod
+    def _formato(cls, value: Any) -> Any:
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str) and _DATA_HORA.match(value):
+            return value
+        raise Mensagem("Informe data e hora válidas")
+
     @field_validator("prazo")
     @classmethod
     def _prazo(cls, value: datetime) -> datetime:
         # Segundos inteiros: o SQLite compara no formato de `datetime()`, sem frações.
-        utc = value.astimezone(UTC).replace(microsecond=0)
+        try:
+            utc = value.astimezone(UTC).replace(microsecond=0)
+        except OverflowError:  # o fuso empurra a data para fora dos anos 1-9999
+            raise Mensagem("Informe data e hora válidas") from None
         if not 2000 <= utc.year <= 2100:
             raise Mensagem("Informe data e hora válidas")
         return utc

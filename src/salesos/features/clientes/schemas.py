@@ -11,6 +11,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validato
 
 from salesos.features.clientes.models import ORIGENS, TIPOS_CLIENTE, TIPOS_INTERACAO
 from salesos.features.clientes.normalize import normalize_email
+from salesos.formularios import Mensagem
 
 TEXTO_LONGO_MAX = 5000
 
@@ -75,4 +76,7 @@ class InteracaoIn(Entrada):
     @field_validator("ocorrida_em")
     @classmethod
     def _utc(cls, value: datetime) -> datetime:
-        return value.astimezone(UTC)
+        try:
+            return value.astimezone(UTC)
+        except OverflowError:  # o fuso empurra a data para fora dos anos 1-9999
+            raise Mensagem("Informe data e hora válidas") from None

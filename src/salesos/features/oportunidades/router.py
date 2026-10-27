@@ -18,6 +18,8 @@ from salesos.features.clientes import service as clientes
 from salesos.features.oportunidades import service
 from salesos.features.oportunidades.models import ETAPAS, ETAPAS_ABERTAS, MOTIVOS_PERDA
 from salesos.features.oportunidades.schemas import FiltroFunil, MudancaEtapaIn, OportunidadeIn
+from salesos.features.tarefas import service as tarefas
+from salesos.features.tarefas.router import ROTULOS as ROTULOS_TAREFAS
 from salesos.formularios import IdDep, RegraViolada, formulario, renderizar, validar, ver
 
 router = APIRouter()
@@ -42,7 +44,7 @@ def _pagina(request: Request, nome: str, contexto: dict[str, Any], status: int =
         "etapas": ETAPAS,
         "etapas_abertas": ETAPAS_ABERTAS,
         "motivos": MOTIVOS_PERDA,
-        "rotulos": service.ROTULOS_ETAPAS | ROTULOS_MOTIVOS | SITUACOES,
+        "rotulos": ROTULOS_TAREFAS | service.ROTULOS_ETAPAS | ROTULOS_MOTIVOS | SITUACOES,
         "situacoes": SITUACOES,
     }
     return renderizar(request, nome, base | contexto, status)
@@ -76,7 +78,7 @@ def funil(request: Request, session: SessionDep) -> Response:
         "filtros": brutos,
         "erros": {},
         "colunas": colunas,
-        "nomes": service.nomes_clientes(session, todas),
+        "nomes": service.nomes_clientes(session, (o.cliente_id for o in todas)),
         "por_coluna": service.POR_COLUNA,
     }
     return _pagina(request, "oportunidades/funil.html", contexto)
@@ -109,7 +111,7 @@ def lista(
         "filtros": brutos,
         "erros": {},
         "resultado": resultado,
-        "nomes": service.nomes_clientes(session, resultado.itens),
+        "nomes": service.nomes_clientes(session, (o.cliente_id for o in resultado.itens)),
         "anterior": link(pagina - 1) if pagina > 1 else None,
         "proxima": link(pagina + 1) if resultado.tem_proxima else None,
     }
@@ -206,6 +208,8 @@ def _detalhe(
         "oportunidade": oportunidade,
         "cliente": cliente,
         "historico": service.movimentacoes(session, oportunidade_id),
+        "tarefas": tarefas.tarefas_da_oportunidade(session, oportunidade_id),
+        "tarefas_max": tarefas.RELACIONADAS_MAX,
         "mudanca": {
             "etapa": oportunidade.etapa,
             "motivo_perda": oportunidade.motivo_perda,

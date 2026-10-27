@@ -53,6 +53,9 @@
   {% endif %}
 </section>
 
+{% from "tarefas/_itens.html" import secao as secao_tarefas with context %}
+{{ secao_tarefas(tarefas, tarefas_max, "/tarefas/nova?cliente_id=%d" % cliente.id, not anonimizado) }}
+
 <div class="colunas">
   <section id="contatos" class="secao" aria-labelledby="titulo-contatos">
     <h2 id="titulo-contatos">Contatos</h2>

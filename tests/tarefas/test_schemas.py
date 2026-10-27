@@ -61,6 +61,8 @@ def test_accepted_types_and_priorities(tipo: str, prioridade: str) -> None:
         # O limite de anos vale para o valor gravado, em UTC.
         ({"prazo": "2000-01-01T00:30:00+03:00"}, "prazo", "Informe data e hora válidas"),
         ({"prazo": "2100-12-31T23:00:00-03:00"}, "prazo", "Informe data e hora válidas"),
+        ({"prazo": "1700000000"}, "prazo", "Informe data e hora válidas"),
+        ({"prazo": 1700000000}, "prazo", "Informe data e hora válidas"),
         ({"oportunidade_id": 0}, "oportunidade_id", "Valor inválido"),
         ({"oportunidade_id": 2**63}, "oportunidade_id", "Valor inválido"),
     ],

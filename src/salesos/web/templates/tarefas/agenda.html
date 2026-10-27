@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
+{% from "tarefas/_itens.html" import itens with context %}
+{% block title %}Agenda · SalesOS{% endblock %}
+{% block content %}
+<h1 class="titulo">Agenda</h1>
+
+{# Fechado por padrão: a agenda é o principal da página, sobretudo no celular. #}
+<details class="filtros-caixa"{% if filtros or erros %} open{% endif %}>
+<summary>Filtrar a agenda</summary>
+<form class="filtros" method="get" action="/tarefas" novalidate aria-label="Filtrar tarefas">
+  {{ resumo_erros(erros, "Filtro inválido. Corrija os campos indicados.") }}
+  <div class="grade-campos">
+    {{ escolha("estado", "Situação", estados, filtros.get("estado", "pendente"), erros, rotulos) }}
+    {{ escolha("tipo", "Tipo", tipos, filtros.get("tipo"), erros, rotulos, vazio="Todos") }}
+    {{ escolha("prioridade", "Prioridade", prioridades, filtros.get("prioridade"), erros, rotulos, vazio="Todas") }}
+    {{ campo("de", "Prazo de", filtros.get("de"), erros, tipo="date") }}
+    {{ campo("ate", "Prazo até", filtros.get("ate"), erros, tipo="date") }}
+  </div>
+  <div class="acoes"><button class="botao" type="submit">Filtrar</button>{% if filtros %}<a href="/tarefas">Limpar filtros</a>{% endif %}</div>
+</form>
+</details>
+
+{% if resultado and resultado.itens %}
+{% if vencidas %}
+<section class="secao" aria-labelledby="titulo-vencidas">
+  <h2 id="titulo-vencidas">Vencidas</h2>
+  {{ itens(vencidas, nomes) }}
+</section>
+{% endif %}
+{% if proximas %}
+<section class="secao" aria-labelledby="titulo-proximas">
+  <h2 id="titulo-proximas">{{ "Próximas" if not filtros else "Tarefas" }}</h2>
+  {{ itens(proximas, nomes) }}
+</section>
+{% endif %}
+{% elif resultado %}
+<div class="vazio">
+  <p>Nenhuma tarefa {{ "neste filtro" if filtros else "pendente" }}.</p>
+  <p class="dica">Tarefas nascem na página de um cliente ou de uma oportunidade.</p>
+  <a class="botao" href="/clientes">Abrir clientes</a>
+</div>
+{% endif %}
+
+{% if anterior or proxima %}
+<nav class="paginas" aria-label="Páginas">
+  {% if anterior %}<a href="{{ anterior }}" rel="prev">Página anterior</a>{% else %}<span></span>{% endif %}
+  <span aria-current="page">Página {{ resultado.pagina }}</span>
+  {% if proxima %}<a href="{{ proxima }}" rel="next">Próxima página</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

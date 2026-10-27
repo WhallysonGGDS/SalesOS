@@ -90,5 +90,5 @@ def hora_local(valor: str) -> datetime | str:
     """`datetime-local` não tem fuso: é interpretado no fuso deste computador."""
     try:
         return datetime.fromisoformat(valor).astimezone()
-    except ValueError:
+    except ValueError, OverflowError:  # Overflow: o fuso leva a data para fora dos anos 1-9999
         return valor  # o schema recusa com a mensagem do campo

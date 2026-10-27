@@ -20,6 +20,9 @@
   {% if oportunidade.motivo_detalhe %}<div class="ficha-larga"><dt>Detalhe do motivo</dt><dd class="texto-livre">{{ oportunidade.motivo_detalhe }}</dd></div>{% endif %}
   {% if oportunidade.observacoes %}<div class="ficha-larga"><dt>Observações</dt><dd class="texto-livre">{{ oportunidade.observacoes }}</dd></div>{% endif %}
 </dl>
+{% from "tarefas/_itens.html" import secao as secao_tarefas with context %}
+{{ secao_tarefas(tarefas, tarefas_max, "/tarefas/nova?cliente_id=%d&oportunidade_id=%d" % (cliente.id, oportunidade.id), not anonimizado) }}
+
 {% if oportunidade.etapa == "ganha" %}<p class="dica">Venda ganha não significa contrato assinado nem pagamento recebido.</p>{% endif %}
 
 <div class="colunas">

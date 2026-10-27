@@ -1,0 +1,35 @@
+{# Uma tarefa por linha: o prazo abre a linha; vencida é dita em texto, não só por cor. #}
+{% macro itens(tarefas, nomes=none) %}
+<ol class="tarefas">
+  {% for t in tarefas %}
+  {% set vencida = t | vencida %}
+  <li class="tarefa">
+    <time class="tarefa-prazo" datetime="{{ t.prazo | data_iso }}">{{ t.prazo | data_local }}</time>
+    <a class="tarefa-titulo" href="/tarefas/{{ t.id }}">{{ t.titulo }}</a>
+    <span class="tarefa-meta">
+      {%- if vencida %}<strong class="tarefa-vencida">Vencida</strong>, {% endif -%}
+      {{ rotulos[t.tipo] }}
+      {%- if nomes is not none %}, {{ nomes.get(t.cliente_id, "") }}{% endif -%}
+      {%- if t.prioridade == "alta" %}, prioridade alta{% endif -%}
+      {%- if t.estado != "pendente" %}, {{ rotulos[t.estado] | lower }}{% endif -%}
+    </span>
+  </li>
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+{# Seção "Tarefas" do cliente e da oportunidade: pendentes primeiro. #}
+{% macro secao(tarefas, maximo, nova, pode_criar) %}
+<section id="tarefas" class="secao" aria-labelledby="titulo-tarefas">
+  <div class="cabecalho">
+    <h2 id="titulo-tarefas">Tarefas</h2>
+    {% if pode_criar %}<a class="botao" href="{{ nova }}">Nova tarefa</a>{% endif %}
+  </div>
+  {% if tarefas %}
+  {{ itens(tarefas) }}
+  {% if tarefas | length >= maximo %}<p class="dica">Mostrando as {{ maximo }} primeiras, pendentes antes.</p>{% endif %}
+  {% else %}
+  <p class="vazio-linha">Nenhuma tarefa por aqui.</p>
+  {% endif %}
+</section>
+{% endmacro %}

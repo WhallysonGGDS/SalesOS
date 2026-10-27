@@ -6,6 +6,7 @@ etapas, nunca título, observações, motivo detalhado ou valor. Não existe fun
 apague movimentações.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -189,8 +190,7 @@ def movimentacoes(session: Session, oportunidade_id: int) -> list[Movimentacao]:
     return list(session.scalars(query))
 
 
-def nomes_clientes(session: Session, oportunidades: list[Oportunidade]) -> dict[int, str]:
+def nomes_clientes(session: Session, ids: Iterable[int]) -> dict[int, str]:
     """Nomes dos clientes de uma tela (uma consulta, limitada pelas próprias listagens)."""
-    ids = {o.cliente_id for o in oportunidades}
-    query = select(Cliente.id, Cliente.nome).where(Cliente.id.in_(ids))
+    query = select(Cliente.id, Cliente.nome).where(Cliente.id.in_(set(ids)))
     return {cliente_id: nome for cliente_id, nome in session.execute(query)}

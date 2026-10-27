@@ -14,6 +14,8 @@
     <nav class="nav" aria-label="Principal">
       <a href="/clientes" {% if secao == "clientes" %}aria-current="page"{% endif %}>Clientes</a>
       <a href="/oportunidades" {% if secao == "funil" %}aria-current="page"{% endif %}>Funil</a>
+      {% set n_vencidas = tarefas_vencidas(request) %}
+      <a href="/tarefas" {% if secao == "tarefas" %}aria-current="page"{% endif %}>Tarefas{% if n_vencidas %}<span class="nav-vencidas">, {{ n_vencidas }} {{ "vencida" if n_vencidas == 1 else "vencidas" }}</span>{% endif %}</a>
     </nav>
     <span class="status"><span class="status-dot" aria-hidden="true"></span>Rodando só neste computador</span>
   </header>

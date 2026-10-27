@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "clientes/_campo.html" import campo, escolha, resumo_erros %}
+{% block title %}{{ "Editar tarefa" if tarefa else "Nova tarefa" }} · SalesOS{% endblock %}
+{% block content %}
+{% set volta = "/tarefas/%d" % tarefa.id if tarefa else "/clientes/%d" % cliente.id %}
+<p class="trilha"><a href="/clientes/{{ cliente.id }}">{{ cliente.nome }}</a></p>
+<h1 class="titulo">{{ "Editar tarefa" if tarefa else "Nova tarefa" }}</h1>
+<form class="formulario" method="post" action="{{ '/tarefas/%d' % tarefa.id if tarefa else '/tarefas' }}" novalidate>
+  {{ resumo_erros(erros, "Não foi possível salvar. Corrija os campos indicados abaixo.") }}
+  {% if erros.get("geral") %}<p class="erro" id="erro-geral">{{ erros.geral }}</p>{% endif %}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+  {% if not tarefa %}<input type="hidden" name="cliente_id" value="{{ cliente.id }}">{% endif %}
+  {{ campo("titulo", "O que fazer", dados.get("titulo"), erros, maximo=200, obrigatorio=true) }}
+  <div class="grade-campos">
+    {{ escolha("tipo", "Tipo", tipos, dados.get("tipo"), erros, rotulos) }}
+    {{ campo("prazo", "Prazo", dados.get("prazo"), erros, tipo="datetime-local", obrigatorio=true, dica="Data e hora deste computador.") }}
+    {{ escolha("prioridade", "Prioridade", prioridades, dados.get("prioridade"), erros, rotulos) }}
+  </div>
+  <p class="dica">Mensagem é só um registro: o SalesOS não envia nada.</p>
+  <div class="campo{% if erros.get('oportunidade_id') %} campo-invalido{% endif %}">
+    <label for="oportunidade_id">Oportunidade</label>
+    <select id="oportunidade_id" name="oportunidade_id"{% if erros.get("oportunidade_id") %} aria-describedby="erro-oportunidade_id" aria-invalid="true"{% endif %}>
+      <option value="">Nenhuma</option>
+      {% for o in oportunidades %}<option value="{{ o.id }}" {% if dados.get("oportunidade_id") == o.id | string %}selected{% endif %}>{{ o.titulo }}</option>{% endfor %}
+    </select>
+    {% if erros.get("oportunidade_id") %}<p class="erro" id="erro-oportunidade_id">{{ erros.oportunidade_id }}</p>{% endif %}
+  </div>
+  {{ campo("descricao", "Descrição", dados.get("descricao"), erros, tipo="textarea", maximo=5000, dica="Opcional, até 5.000 caracteres.") }}
+  <div class="acoes">
+    <button class="botao botao-principal" type="submit">{{ "Salvar alterações" if tarefa else "Criar tarefa" }}</button>
+    <a href="{{ volta }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
