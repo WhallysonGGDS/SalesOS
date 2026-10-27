@@ -1,6 +1,6 @@
 # Fase 04 — Tarefas e follow-ups: plano de implementação
 
-> **VERSÃO FINAL — D1–D10 aprovadas pelo usuário em 2026-10-27, sem mudança de escopo.** B1 já foi implementado (pré-requisito pedido pelo usuário). Implementação ainda não iniciada.
+> **VERSÃO FINAL — D1–D10 aprovadas pelo usuário em 2026-10-27, sem mudança de escopo.** B1 já foi implementado. Implementação autorizada em 2026-10-27 e em andamento.
 > Criado com `superpowers:writing-plans`. Execução proposta: nativa (o agente principal implementa), com revisão de segurança independente por etapa de código e revisão geral no fim, como nas Fases 02.1 e 03.
 
 **Objetivo:** registrar tarefas comerciais com prazo, prioridade e situação, mostrar o que está vencido e guardar o histórico de conclusão, sem enviar nada para fora do computador.
