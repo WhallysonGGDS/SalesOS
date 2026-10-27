@@ -137,7 +137,8 @@ def _formulario(
 ) -> Response:
     lista = oportunidades.oportunidades_do_cliente(session, cliente_id)
     escolhida = dados.get("oportunidade_id", "")
-    if escolhida.isdigit() and int(escolhida) not in {o.id for o in lista}:
+    valido = escolhida.isascii() and escolhida.isdigit() and len(escolhida) <= 18  # como o _id
+    if valido and int(escolhida) not in {o.id for o in lista}:
         # Mais antiga que as listadas: sem ela, salvar o formulário apagaria o vínculo.
         antiga = session.get(Oportunidade, int(escolhida))
         if antiga is not None and antiga.cliente_id == cliente_id:

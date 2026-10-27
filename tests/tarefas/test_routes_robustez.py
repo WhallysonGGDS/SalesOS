@@ -49,3 +49,15 @@ def test_counter_hides_only_a_missing_table_and_logs_other_errors(
     assert web.get("/clientes").status_code == 200
     avisos = [r for r in caplog.records if r.levelno == logging.WARNING]
     assert any("contador de tarefas vencidas" in r.getMessage() for r in avisos)
+
+
+@pytest.mark.parametrize("valor", ["²", "99999999999999999999"])
+def test_rejected_opportunity_id_redraws_the_form_without_500(web: TestClient, valor: str) -> None:
+    # O formulário é refeito com o valor recusado: ele não pode chegar ao int() nem ao SQLite.
+    cliente_id = _cliente(web)
+    dados = {"tipo": "ligacao", "titulo": "X", "prazo": "2099-01-01T10:00"}
+    criar = _post(web, "/tarefas", cliente_id=str(cliente_id), oportunidade_id=valor, **dados)
+    assert criar.status_code == 422 and 'id="erro-oportunidade_id"' in criar.text
+    tarefa_id = _tarefa(web, cliente_id)
+    editar = _post(web, f"/tarefas/{tarefa_id}", oportunidade_id=valor, **dados)
+    assert editar.status_code == 422
