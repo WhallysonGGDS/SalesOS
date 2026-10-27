@@ -307,4 +307,6 @@ def recuperar(db: Path, pasta_backups: Path | None = None) -> Recuperacao:
         residuos = sorted(db.parent.glob(f"{db.name}.staging-*"))
         if pasta_backups is not None and pasta_backups.exists():
             residuos += sorted(pasta_backups.glob("*.tmp"))
+            # Cópias de `restore --migrar` interrompido à força (B1): só relatadas, nunca apagadas.
+            residuos += sorted(p for p in pasta_backups.glob(".migracao-*") if p.is_dir())
         return Recuperacao(estado, residuos)

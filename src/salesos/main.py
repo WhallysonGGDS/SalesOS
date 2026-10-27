@@ -20,6 +20,7 @@ from salesos.db import create_db_engine, sqlite_file
 from salesos.features.clientes import router as clientes
 from salesos.features.oportunidades import router as oportunidades
 from salesos.lock import Travado, caminho_trava, trava
+from salesos.migracao_backup import migrar_backup
 from salesos.restore import RestauracaoRecusada, controle_pendente, recuperar, restaurar
 from salesos.security import LimiteCorpo, form_token, require_csrf, security_middleware
 
@@ -98,6 +99,11 @@ def _argumentos() -> argparse.Namespace:
         action="store_true",
         help="aceita um backup anterior a uma anonimização (os dados voltam)",
     )
+    restore.add_argument(
+        "--migrar",
+        action="store_true",
+        help="migra uma cópia de um backup de versão anterior antes de restaurar",
+    )
     comandos.add_parser("recover", help="termina com segurança uma restauração interrompida")
     return parser.parse_args()
 
@@ -115,7 +121,14 @@ def run() -> None:
                 raise SystemExit(PENDENTE)
             print(f"Backup criado: {criar_backup(db, settings.backup_dir)}")
         elif args.comando == "restore":
-            pre = restaurar(db, args.arquivo, settings.backup_dir, args.aceitar_reintroducao)
+            arquivo = args.arquivo
+            if args.migrar:
+                if controle_pendente(db):
+                    raise SystemExit(PENDENTE)
+                arquivo = migrar_backup(arquivo, settings.backup_dir)
+                if arquivo != args.arquivo:
+                    print(f"Backup migrado para a versão atual: {arquivo}")
+            pre = restaurar(db, arquivo, settings.backup_dir, args.aceitar_reintroducao)
             print(f"Banco restaurado. O anterior foi preservado em: {pre}")
         elif args.comando == "recover":
             relatorio = recuperar(db, settings.backup_dir)

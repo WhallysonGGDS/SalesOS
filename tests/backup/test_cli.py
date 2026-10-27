@@ -8,9 +8,11 @@ from typing import Any
 import pytest
 
 from salesos import main
+from salesos.backup import criar_backup
 from salesos.lock import Travado, caminho_trava, trava
 from salesos.restore import controle_pendente
 from tests.backup.conftest import criar_banco, nomes
+from tests.conftest import migrar
 
 
 @pytest.fixture
@@ -108,3 +110,24 @@ def test_backup_command_reports_locked_database_instead_of_hanging(
     finally:
         dono.rollback()
         dono.close()
+
+
+def test_restore_with_migrate_flag_restores_an_old_backup(
+    db: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    antigo = tmp_path / "antigo" / "salesos.db"
+    migrar(antigo, "0002")
+    conn = sqlite3.connect(antigo)
+    conn.execute("INSERT INTO clientes (tipo, nome, origem) VALUES ('PJ', 'Do backup', 'site')")
+    conn.commit()
+    conn.close()
+    arquivo = criar_backup(antigo, tmp_path / "antigos")
+
+    with pytest.raises(SystemExit, match="revisão do esquema 0002"):
+        _rodar(monkeypatch, "restore", str(arquivo))  # sem --migrar: recusa de sempre
+    assert nomes(db) == ["Atual"]
+
+    _rodar(monkeypatch, "restore", str(arquivo), "--migrar")
+    saida = capsys.readouterr().out
+    assert "Backup migrado" in saida and "migrado-" in saida
+    assert nomes(db) == ["Do backup"]

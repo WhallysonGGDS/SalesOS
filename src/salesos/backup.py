@@ -169,7 +169,7 @@ def _copiar_sqlite(origem: Path, destino: Path) -> None:
         fonte.close()
 
 
-def _publicar(temporario: Path, final: Path) -> None:
+def publicar(temporario: Path, final: Path) -> None:
     """Move sem sobrescrever: falha com FileExistsError se o destino já existir."""
     if sys.platform == "win32":
         os.rename(temporario, final)  # no Windows, rename nunca sobrescreve
@@ -202,9 +202,9 @@ def criar_backup(db: Path, pasta: Path, prefixo: str = "salesos") -> Path:
         manifesto_tmp.write_text(json.dumps(dados, indent=2), encoding="utf-8")
         restringir(manifesto_tmp)
         sincronizar(manifesto_tmp)
-        _publicar(temporario, final)
+        publicar(temporario, final)
         publicado = True
-        _publicar(manifesto_tmp, manifesto)
+        publicar(manifesto_tmp, manifesto)
         sincronizar(pasta)
     except BaseException:
         if publicado and not manifesto.exists():
