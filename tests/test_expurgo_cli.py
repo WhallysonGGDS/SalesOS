@@ -128,3 +128,63 @@ def test_unmigrated_database_gives_a_message_not_a_traceback(
     with pytest.raises(SystemExit) as erro:
         _rodar(monkeypatch, "EXPURGAR 1")
     assert "OperationalError" in str(erro.value)
+
+
+def test_purge_refuses_to_start_while_another_program_reads_the_database(
+    db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Outro programa (DB Browser, por exemplo) impediria esvaziar o -wal depois do expurgo.
+    _cliente(db, "2000-01-01 00:00:00.000000")
+    antes = _dump(db)
+    leitor = sqlite3.connect(db)
+    try:
+        leitor.execute("PRAGMA journal_mode=WAL")
+        leitor.execute("BEGIN")
+        leitor.execute("SELECT count(*) FROM clientes").fetchone()
+        with pytest.raises(SystemExit, match="Nada foi apagado"):
+            _rodar(monkeypatch, "EXPURGAR 1")
+    finally:
+        leitor.close()
+    assert _dump(db) == antes
+
+
+def test_purge_does_not_claim_physical_completion_when_the_wal_stays(
+    db: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # Um programa abre o banco depois da checagem inicial: os registros saem, mas o
+    # conteúdo apagado pode continuar no -wal. O comando não diz "concluído".
+    _cliente(db, "2000-01-01 00:00:00.000000")
+    monkeypatch.setattr("salesos.expurgo.esvaziar_wal", lambda _s: False)  # depois do expurgo
+    with pytest.raises(SystemExit, match="NÃO terminou") as erro:
+        _rodar(monkeypatch, "EXPURGAR 1")
+    saida = capsys.readouterr().out
+    assert "Expurgo concluído" not in saida and NOME not in saida + str(erro.value)
+    assert "rode `uv run salesos expurgar` de novo" in str(erro.value)
+
+
+def test_running_again_confirms_the_wal_is_empty(
+    db: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _rodar(monkeypatch, "não deveria ser pedido")
+    assert "-wal está vazio" in capsys.readouterr().out
+
+
+def test_other_sqlite_errors_keep_their_real_diagnosis(
+    db: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Só bloqueio vira "outro programa"; arquivo só de leitura ou erro de disco dizem o que é.
+    from salesos.restore import RestauracaoRecusada
+
+    def somente_leitura(_db: Path) -> None:
+        raise RestauracaoRecusada(
+            "Não foi possível usar o banco atual (SQLITE_READONLY: x). Nada foi alterado."
+        )
+
+    _cliente(db, "2000-01-01 00:00:00.000000")
+    antes = _dump(db)
+    monkeypatch.setattr("salesos.main.aquietar", somente_leitura)
+    with pytest.raises(SystemExit) as erro:
+        _rodar(monkeypatch, "EXPURGAR 1")
+    assert "SQLITE_READONLY" in str(erro.value) and "Outro programa" not in str(erro.value)
+    assert "Nada foi apagado" in str(erro.value)
+    assert _dump(db) == antes

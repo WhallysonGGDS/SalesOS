@@ -81,6 +81,7 @@ Definida pelo responsável pelo tratamento. Este documento descreve a política 
 4. Apaga, numa única transação, o cliente e **tudo** o que é dele: interações e eventos da linha do tempo, contatos, oportunidades, histórico de etapas, tarefas e histórico das tarefas. Não guarda agregados.
 5. Se algum registro de **outro** cliente apontar para um expurgado (dado inconsistente), recusa tudo e não apaga nada.
 6. Rodar de novo é seguro: o que já saiu não aparece mais.
+7. Com outro programa usando o banco (DB Browser, por exemplo), o comando recusa e não apaga nada. Se um programa abrir o banco durante o expurgo, os registros saem, mas o comando avisa que o **expurgo físico não terminou** (o conteúdo apagado pode continuar no arquivo `-wal`) e não diz "concluído": feche os programas e rode de novo até ver "O arquivo -wal está vazio".
 
 Sugestão de rotina: rodar uma vez por mês e guardar a saída do comando como registro do expurgo (ela não tem nomes).
 

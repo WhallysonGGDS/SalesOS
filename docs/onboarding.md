@@ -30,7 +30,8 @@ Rode todos os comandos a partir da raiz do projeto: os caminhos `data\...` são 
 uv run salesos backup
 ```
 
-- Cria `data\backups\salesos-<data>.db` e o manifesto `.db.json` (SHA-256, revisão), depois de conferir a integridade.
+- Cria `data\backups\salesos-<data>.db` e o manifesto `.db.json` (SHA-256, revisão), depois de conferir a integridade do arquivo do SQLite.
+- **O backup é o retrato do banco atual, mesmo que ele tenha dados inválidos** (por exemplo, alterados à mão no DB Browser): `salesos backup` **não** confere as regras dos dados (CHECKs e chaves estrangeiras). Essa conferência acontece só na **restauração**, que recusa um backup assim ("dados que violam um CHECK do banco" ou "dados com chave estrangeira órfã") sem alterar nada.
 - Nada é apagado automaticamente: os backups se acumulam e contêm dados pessoais. Guarde uma cópia fora do computador (pendrive criptografado, por exemplo) e veja a limpeza em `docs/privacy.md`.
 - Para mudar a pasta: `SALESOS_BACKUP_DIR` no `.env`.
 - Se aparecer "bloqueado por outro programa", algum programa (por exemplo, o DB Browser no meio de uma alteração) está segurando o banco: feche-o e rode de novo.

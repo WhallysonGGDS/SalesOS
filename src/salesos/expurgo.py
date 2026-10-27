@@ -43,6 +43,12 @@ class ExpurgoRecusado(RuntimeError):
 
 
 @dataclass(frozen=True)
+class Resultado:
+    linhas: dict[str, int]
+    fisico_completo: bool  # False: o conteúdo apagado pode continuar no -wal
+
+
+@dataclass(frozen=True)
 class Abrangencia:
     cliente_id: int
     anonimizado_em: datetime
@@ -122,7 +128,14 @@ def _conferir(session: Session, ids: Sequence[int], agora: datetime) -> None:
         )
 
 
-def expurgar(session: Session, ids: Sequence[int], agora: datetime | None = None) -> dict[str, int]:
+def esvaziar_wal(session: Session) -> bool:
+    """Checkpoint completo do WAL; False se outro programa ainda segura o banco aberto."""
+    ocupado, paginas, copiadas = session.execute(text("PRAGMA wal_checkpoint(TRUNCATE)")).one()
+    session.commit()
+    return not ocupado and copiadas >= paginas
+
+
+def expurgar(session: Session, ids: Sequence[int], agora: datetime | None = None) -> Resultado:
     """Apaga os clientes e tudo o que é deles, num único commit; devolve linhas por tabela."""
     agora = agora or datetime.now(UTC)
     _conferir(session, ids, agora)
@@ -132,12 +145,11 @@ def expurgar(session: Session, ids: Sequence[int], agora: datetime | None = None
         relatorio[tabela.__tablename__] = int(getattr(resultado, "rowcount", 0) or 0)
     session.commit()
     # Como na anonimização: `secure_delete` zera o conteúdo; o checkpoint esvazia o `-wal`.
-    ocupado, paginas, copiadas = session.execute(text("PRAGMA wal_checkpoint(TRUNCATE)")).one()
-    session.commit()
-    if ocupado or copiadas < paginas:
+    completo = esvaziar_wal(session)
+    if not completo:
         # Outro programa lendo o banco: o conteúdo apagado pode ficar até o próximo checkpoint.
         logger.warning(
             "Checkpoint do WAL incompleto após o expurgo: os dados apagados podem continuar no "
             "arquivo -wal até o próximo checkpoint. Feche outros programas que usem o banco."
         )
-    return relatorio
+    return Resultado(relatorio, completo)

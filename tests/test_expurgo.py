@@ -95,10 +95,11 @@ def test_purge_removes_the_client_and_everything_linked_and_nothing_else(session
     )
     session.commit()
     antes = _contagens(session)
-    relatorio = expurgo.expurgar(session, [alvo], agora=AGORA)
+    resultado = expurgo.expurgar(session, [alvo], agora=AGORA)
     depois = _contagens(session)
-    assert relatorio == {t: antes[t] - depois[t] for t in antes}
-    assert relatorio["clientes"] == 1 and relatorio["contatos"] == 1
+    assert resultado.linhas == {t: antes[t] - depois[t] for t in antes}
+    assert resultado.linhas["clientes"] == 1 and resultado.linhas["contatos"] == 1
+    assert resultado.fisico_completo  # ninguém mais lendo: o -wal foi esvaziado
     assert session.get(Cliente, alvo) is None
     for tabela in (Interacao, Oportunidade, Tarefa, Contato):
         assert not session.scalars(select(tabela).where(tabela.cliente_id == alvo)).all()
@@ -201,9 +202,10 @@ def test_purge_warns_when_the_wal_could_not_be_emptied(
     try:
         leitor.execute("BEGIN")
         leitor.execute("SELECT count(*) FROM clientes").fetchone()  # segura uma leitura
-        expurgo.expurgar(session, [alvo], agora=AGORA)
+        resultado = expurgo.expurgar(session, [alvo], agora=AGORA)
     finally:
         leitor.close()
+    assert not resultado.fisico_completo  # o comando não pode dizer que o expurgo terminou
     avisos = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
     assert any("-wal" in a for a in avisos)
     assert not any("Alvo" in a for a in avisos)

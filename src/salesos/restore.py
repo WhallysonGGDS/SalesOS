@@ -157,7 +157,7 @@ def _mover(origem: Path, destino: Path) -> None:
             time.sleep(0.2 * 2**tentativa)
 
 
-def _aquietar(db: Path) -> None:
+def aquietar(db: Path) -> None:
     """Prova que ninguém usa o banco e tira-o do WAL, deixando um arquivo único e completo.
 
     `BEGIN IMMEDIATE` detecta escritores; o checkpoint incompleto detecta leitores; a saída
@@ -180,7 +180,7 @@ def _aquietar(db: Path) -> None:
         raise RestauracaoRecusada(FECHE_OS_PROGRAMAS)
 
 
-def _voltar_wal(db: Path) -> None:
+def voltar_wal(db: Path) -> None:
     """Melhor esforço: a aplicação também liga o WAL em toda conexão."""
     try:
         conn = sqlite3.connect(f"{db.resolve().as_uri()}?mode=rw", uri=True, timeout=0)
@@ -240,7 +240,7 @@ def _recuperar(db: Path, controle: Path) -> str:
             f"{dados.get('seguranca')}"
         )
     staging.unlink(missing_ok=True)  # cópia temporária do backup, que continua intacto
-    _voltar_wal(db)
+    voltar_wal(db)
     _arquivar(controle, dados, "aborted")
     return estado
 
@@ -276,7 +276,7 @@ def restaurar(
             except BackupInvalido as erro:
                 raise RestauracaoRecusada(f"Backup recusado: {erro}. Nada foi alterado.") from erro
             _checar_anonimizacao(db, staging, aceitar_reintroducao)
-            _aquietar(db)
+            aquietar(db)
             _gravar_estado(controle, dados, "quiesced")
             seguranca = criar_backup(db, pasta_backups, prefixo="pre-restore")
             verificar_backup(seguranca, exigir_revisao=False)
@@ -288,7 +288,7 @@ def restaurar(
             _mover(staging, db)
             _gravar_estado(controle, dados, "swapped")
             verificar_backup(db, manifesto_de=arquivo)
-            _voltar_wal(db)
+            voltar_wal(db)
             _gravar_estado(controle, dados, "verified")
         except Exception:
             try:

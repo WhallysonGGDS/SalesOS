@@ -25,7 +25,15 @@ from salesos.features.oportunidades import router as oportunidades
 from salesos.features.tarefas import router as tarefas
 from salesos.lock import Travado, caminho_trava, trava
 from salesos.migracao_backup import migrar_backup
-from salesos.restore import RestauracaoRecusada, controle_pendente, recuperar, restaurar
+from salesos.restore import (
+    FECHE_OS_PROGRAMAS,
+    RestauracaoRecusada,
+    aquietar,
+    controle_pendente,
+    recuperar,
+    restaurar,
+    voltar_wal,
+)
 from salesos.security import LimiteCorpo, form_token, require_csrf, security_middleware
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -113,17 +121,43 @@ AVISO_EXPURGO = (
 )
 
 
+EXPURGO_OCUPADO = (
+    "Outro programa está com o banco aberto (por exemplo, o DB Browser). "
+    "Feche-o e rode o comando de novo. Nada foi apagado."
+)
+EXPURGO_INCOMPLETO = (
+    "O expurgo físico NÃO terminou: um programa abriu o banco durante o expurgo, e o conteúdo "
+    "apagado pode continuar no arquivo -wal. Feche os outros programas e rode "
+    "`uv run salesos expurgar` de novo para terminar."
+)
+
+
 def _expurgar(db: Path, database_url: str) -> None:
     """Expurgo manual (P1): mostra a abrangência e só apaga com a confirmação exata."""
     with trava(caminho_trava(db)):  # servidor, restore e migração ficam de fora
         if controle_pendente(db):
             raise SystemExit(PENDENTE)
+        # Como no restore: qualquer outra conexão aberta (até ociosa) impediria esvaziar o -wal
+        # depois do expurgo. Um checkpoint só não basta: com o -wal vazio, ele não acusa leitores.
+        try:
+            aquietar(db)
+        except RestauracaoRecusada as erro:
+            # Só bloqueio é "outro programa"; outro erro do SQLite mantém o diagnóstico real.
+            if str(erro) == FECHE_OS_PROGRAMAS:
+                raise SystemExit(EXPURGO_OCUPADO) from erro
+            texto = str(erro).replace("Nada foi alterado.", "Nada foi apagado.")
+            raise SystemExit(texto) from erro
+        finally:
+            voltar_wal(db)
         engine = create_db_engine(database_url)
         try:
             with Session(engine) as session:
                 escopo = expurgo.abrangencia(session)
                 if not escopo:
-                    print("Nenhum cliente anonimizado há 12 meses ou mais. Nada a expurgar.")
+                    print(
+                        "Nenhum cliente anonimizado há 12 meses ou mais. Nada a expurgar. "
+                        "O arquivo -wal está vazio."
+                    )
                     return
                 print(f"Expurgo de {len(escopo)} cliente(s) anonimizado(s) há 12 meses ou mais:")
                 for item in escopo:
@@ -138,8 +172,12 @@ def _expurgar(db: Path, database_url: str) -> None:
                     resposta = ""
                 if resposta.strip() != pedido:
                     raise SystemExit("Confirmação diferente. Nada foi apagado.")
-                relatorio = expurgo.expurgar(session, [item.cliente_id for item in escopo])
-                print(f"Expurgo concluído: {expurgo.descrever(relatorio)}.")
+                resultado = expurgo.expurgar(session, [item.cliente_id for item in escopo])
+                linhas = expurgo.descrever(resultado.linhas)
+                if not resultado.fisico_completo:
+                    print(f"Registros apagados do banco: {linhas}.")
+                    raise SystemExit(EXPURGO_INCOMPLETO)
+                print(f"Expurgo concluído: {linhas}.")
         finally:
             engine.dispose()
 
