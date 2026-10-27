@@ -25,7 +25,7 @@ Este documento descreve o que o SalesOS **faz hoje** com dados pessoais (Fases 0
 ## Proteções em uso
 
 - O servidor só escuta em `127.0.0.1` e recusa outros nomes de host.
-- **Eventos** da linha do tempo registram só a ação e o nome dos campos ("Cliente atualizado: email, nome"), nunca os valores (D4). Eventos de oportunidades levam só o número, a ação e a etapa: nunca título, observações, detalhe do motivo nem valor (R9).
+- **Eventos** da linha do tempo registram só a ação e o nome dos campos ("Cliente atualizado: email, nome"), nunca os valores (D4). Eventos de oportunidades levam só o número, a ação e a etapa: nunca título, observações, detalhe do motivo nem valor (R9). Eventos de tarefas levam só o número e a ação ("Tarefa #12 concluída"), e na edição o nome dos campos: nunca título nem descrição (D6, ADR 0007).
 - **Logs:** o log de acesso do servidor está desligado (a URL da busca traria nomes e e-mails), e os erros do banco não levam os valores dos parâmetros.
 - **Navegador:** todas as páginas saem com `Cache-Control: no-store`, para não ficarem guardadas no cache depois de uma anonimização.
 - **Permissões (Linux e macOS):** banco, backups e cópias com `0600` e a pasta de backups com `0700`. **No Windows** os bits POSIX não se aplicam; a proteção depende das permissões (ACL) da pasta onde o projeto está. Mantenha o projeto dentro da sua pasta de usuário. Não verificado no Windows.
@@ -46,6 +46,8 @@ O que acontece, de forma irreversível **dentro do SalesOS** (D9):
 | Eventos do sistema | ficam (não têm dados pessoais) e ganham "Cliente anonimizado" |
 | Oportunidades | título vira "Oportunidade #&lt;número&gt;"; observações e detalhe do motivo de perda apagados; **valor, etapa, motivo da lista e datas ficam** (ver pendência abaixo) |
 | Histórico de etapas | fica como está (só etapas e datas) |
+| Tarefas | título vira "Tarefa #&lt;número&gt;"; descrição apagada; **tipo, prioridade, estado, prazo e datas ficam** (ver pendência abaixo) |
+| Histórico das tarefas | fica como está (só ações e datas) |
 | Busca | os dados antigos não são mais encontrados |
 | Alterações | o cliente passa a recusar qualquer mudança |
 
@@ -59,7 +61,7 @@ No arquivo do banco, `secure_delete` zera o conteúdo apagado e um checkpoint es
 
 ## Pendência P1 — finalidade e prazo de retenção (bloqueia dados reais)
 
-Depois de anonimizar um cliente, o SalesOS mantém valor, etapa, motivo da lista e datas das oportunidades dele. **Esses dados não são declarados anônimos**: continuam ligados ao registro do cliente, e a combinação com outras informações pode permitir identificá-lo.
+Depois de anonimizar um cliente, o SalesOS mantém valor, etapa, motivo da lista e datas das oportunidades dele, e tipo, prioridade, estado, prazo e datas das tarefas dele (D10). **Esses dados não são declarados anônimos**: continuam ligados ao registro do cliente, e a combinação com outras informações pode permitir identificá-lo.
 
 Ainda não estão definidos:
 

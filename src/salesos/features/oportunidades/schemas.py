@@ -3,7 +3,6 @@
 Etapa, fechamento e cliente nunca vêm do formulário de oportunidade: só o serviço os define.
 """
 
-import re
 from datetime import date
 from typing import Any, Literal
 
@@ -13,24 +12,7 @@ from salesos.dinheiro import MAXIMO_CENTAVOS, centavos
 from salesos.features.clientes.schemas import TEXTO_LONGO_MAX, Entrada, um_de
 from salesos.features.oportunidades.models import ETAPAS, MOTIVOS_PERDA
 from salesos.formularios import Mensagem
-
-_DATA = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")  # o que o <input type="date"> envia
-
-
-def _data(value: Any) -> Any:
-    """Só AAAA-MM-DD de 2000 a 2100; o Pydantic aceitaria timestamps e outros formatos."""
-    if isinstance(value, str) and not value.strip():
-        return None
-    if value is None or isinstance(value, date):
-        return value
-    try:
-        if isinstance(value, str) and _DATA.fullmatch(value):
-            dia = date.fromisoformat(value)
-            if 2000 <= dia.year <= 2100:
-                return dia
-    except ValueError:
-        pass
-    raise Mensagem("Data inválida")
+from salesos.periodo import data_do_formulario
 
 
 class OportunidadeIn(Entrada):
@@ -54,7 +36,7 @@ class OportunidadeIn(Entrada):
     @field_validator("previsao_fechamento", mode="before")
     @classmethod
     def _previsao(cls, value: Any) -> Any:
-        return _data(value)
+        return data_do_formulario(value)
 
 
 class MudancaEtapaIn(Entrada):
@@ -93,7 +75,7 @@ class FiltroFunil(Entrada):
     @field_validator("de", "ate", mode="before")
     @classmethod
     def _datas(cls, value: Any) -> Any:
-        return _data(value)
+        return data_do_formulario(value)
 
     @field_validator("ate")
     @classmethod

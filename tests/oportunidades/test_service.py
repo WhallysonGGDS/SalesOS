@@ -13,6 +13,7 @@ from salesos.features.clientes.schemas import ClienteIn
 from salesos.features.oportunidades import service
 from salesos.features.oportunidades.models import ETAPAS_ABERTAS, Movimentacao, Oportunidade
 from salesos.features.oportunidades.schemas import MudancaEtapaIn, OportunidadeIn
+from salesos.formularios import RegraViolada
 
 
 def _cliente(session: Session) -> Cliente:
@@ -101,7 +102,7 @@ def test_win_sets_closing_date_and_requires_positive_value(session: Session) -> 
     for valor in (None, 0):
         oportunidade = _nova(session, valor=valor)
         antes = _contagens(session)
-        with pytest.raises(service.RegraViolada) as erro:
+        with pytest.raises(RegraViolada) as erro:
             _mudar(session, oportunidade, "ganha")
         assert erro.value.campo == "etapa"
         session.rollback()
@@ -114,7 +115,7 @@ def test_win_sets_closing_date_and_requires_positive_value(session: Session) -> 
 def test_won_opportunity_cannot_lose_its_value_on_edit(session: Session) -> None:
     oportunidade = _mudar(session, _nova(session), "ganha")
     for valor in (None, 0):
-        with pytest.raises(service.RegraViolada) as erro:
+        with pytest.raises(RegraViolada) as erro:
             service.atualizar_oportunidade(
                 session,
                 oportunidade.id,
@@ -137,7 +138,7 @@ def test_final_to_final_requires_reopening_first(session: Session, final: str, o
     extra = {"motivo_perda": "preco"}
     oportunidade = _mudar(session, _nova(session), final, **(extra if final == "perdida" else {}))
     antes = _contagens(session)
-    with pytest.raises(service.RegraViolada, match="Reabra"):
+    with pytest.raises(RegraViolada, match="Reabra"):
         _mudar(session, oportunidade, outro, **(extra if outro == "perdida" else {}))
     session.rollback()
     assert _contagens(session) == antes
@@ -252,7 +253,7 @@ def test_changing_only_the_reason_of_a_lost_opportunity_asks_to_reopen(session: 
     oportunidade = _mudar(session, _nova(session), "perdida", motivo_perda="preco")
     antes = _contagens(session)
     _mudar(session, oportunidade, "perdida", motivo_perda="preco")  # sem mudança: nada (R5)
-    with pytest.raises(service.RegraViolada, match="reabra") as erro:
+    with pytest.raises(RegraViolada, match="reabra") as erro:
         _mudar(session, oportunidade, "perdida", motivo_perda="adiado")
     assert erro.value.campo == "motivo_perda"
     session.rollback()

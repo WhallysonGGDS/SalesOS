@@ -37,6 +37,14 @@ class Mensagem(ValueError):
     """Erro de validação cujo texto aparece como está no campo do formulário."""
 
 
+class RegraViolada(ValueError):
+    """Regra que depende do estado do registro; a rota mostra a mensagem no campo."""
+
+    def __init__(self, campo: str, mensagem: str) -> None:
+        super().__init__(mensagem)
+        self.campo = campo
+
+
 def erros(erro: ValidationError) -> dict[str, str]:
     """Mensagens por campo, sem repetir o valor enviado."""
     mensagens: dict[str, str] = {}
@@ -51,7 +59,7 @@ def erros(erro: ValidationError) -> dict[str, str]:
             texto = "Preencha este campo"
         elif campo == "email":
             texto = "E-mail inválido"
-        elif campo == "ocorrida_em":
+        elif campo in ("ocorrida_em", "prazo"):
             texto = "Informe data e hora válidas"
         else:
             texto = "Valor inválido"

@@ -16,6 +16,7 @@ from salesos.features.clientes.models import Cliente, Contato, Interacao
 from salesos.features.clientes.normalize import like_contains, search_key
 from salesos.features.clientes.schemas import ClienteIn, ContatoIn, InteracaoIn
 from salesos.features.oportunidades.models import Oportunidade
+from salesos.features.tarefas.models import Tarefa
 
 logger = logging.getLogger(__name__)
 
@@ -253,6 +254,12 @@ def anonimizar_cliente(session: Session, cliente_id: int) -> None:
             observacoes=None,
             motivo_detalhe=None,
         )
+    )
+    # D10 (ADR 0007): mesmo critério para as tarefas; tipo, prioridade, estado e datas ficam (P1).
+    session.execute(
+        update(Tarefa)
+        .where(Tarefa.cliente_id == cliente.id)
+        .values(titulo="Tarefa #" + cast(Tarefa.id, String), descricao=None)
     )
     session.execute(
         update(Interacao)

@@ -18,7 +18,7 @@ from salesos.features.clientes import service as clientes
 from salesos.features.oportunidades import service
 from salesos.features.oportunidades.models import ETAPAS, ETAPAS_ABERTAS, MOTIVOS_PERDA
 from salesos.features.oportunidades.schemas import FiltroFunil, MudancaEtapaIn, OportunidadeIn
-from salesos.formularios import IdDep, formulario, renderizar, validar, ver
+from salesos.formularios import IdDep, RegraViolada, formulario, renderizar, validar, ver
 
 router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -182,7 +182,7 @@ async def atualizar(request: Request, session: SessionDep, oportunidade_id: IdDe
         if isinstance(entrada, OportunidadeIn):
             service.atualizar_oportunidade(session, oportunidade_id, entrada)
             return ver(f"/oportunidades/{oportunidade_id}")
-    except service.RegraViolada as erro:
+    except RegraViolada as erro:
         session.rollback()
         entrada = {erro.campo: str(erro)}
     contexto: dict[str, Any] = {
@@ -230,7 +230,7 @@ async def mudar_etapa(request: Request, session: SessionDep, oportunidade_id: Id
         if isinstance(entrada, MudancaEtapaIn):
             service.mudar_etapa(session, oportunidade_id, entrada)
             return ver(f"/oportunidades/{oportunidade_id}")
-    except service.RegraViolada as erro:
+    except RegraViolada as erro:
         session.rollback()
         entrada = {erro.campo: str(erro)}
     return _detalhe(request, session, oportunidade_id, 422, mudanca=dados, erros=entrada)

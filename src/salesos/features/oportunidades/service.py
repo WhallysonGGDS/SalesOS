@@ -26,6 +26,7 @@ from salesos.features.oportunidades.models import (
     Oportunidade,
 )
 from salesos.features.oportunidades.schemas import FiltroFunil, MudancaEtapaIn, OportunidadeIn
+from salesos.formularios import RegraViolada
 from salesos.periodo import intervalo_utc
 
 POR_COLUNA = 20
@@ -46,14 +47,6 @@ SITUACOES = {
     "ganhas": ("ganha",),
     "perdidas": ("perdida",),
 }
-
-
-class RegraViolada(ValueError):
-    """Regra que depende do estado da oportunidade; a rota mostra a mensagem no campo."""
-
-    def __init__(self, campo: str, mensagem: str) -> None:
-        super().__init__(mensagem)
-        self.campo = campo
 
 
 @dataclass(frozen=True)
