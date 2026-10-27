@@ -130,9 +130,18 @@
       </li>
       {% endfor %}
     </ol>
-    {% if linha | length >= 50 %}<p class="dica">Mostrando as 50 interações mais recentes.</p>{% endif %}
+    {% elif linha_pagina.pagina > 1 %}
+    <p class="vazio-linha">Nenhuma interação nesta página.</p>
     {% else %}
     <p class="vazio-linha">Nenhuma interação registrada.</p>
+    {% endif %}
+    {% set p = linha_pagina %}
+    {% if p.pagina > 1 or p.tem_proxima %}
+    <nav class="paginas" aria-label="Páginas da linha do tempo">
+      {% if p.pagina > 1 %}<a href="/clientes/{{ cliente.id }}?linha_pagina={{ p.pagina - 1 }}#linha" rel="prev">Mais recentes</a>{% else %}<span></span>{% endif %}
+      <span aria-current="page">Página {{ p.pagina }}</span>
+      {% if p.tem_proxima %}<a href="/clientes/{{ cliente.id }}?linha_pagina={{ p.pagina + 1 }}#linha" rel="next">Interações mais antigas</a>{% else %}<span></span>{% endif %}
+    </nav>
     {% endif %}
   </section>
 </div>

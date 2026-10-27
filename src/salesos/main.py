@@ -16,7 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from salesos import expurgo
+from salesos import expurgo, paginas_erro
 from salesos.backup import BackupInvalido, criar_backup
 from salesos.config import ALLOWED_HOSTS, Settings
 from salesos.db import create_db_engine, sqlite_file
@@ -76,6 +76,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     clientes.configurar(app)
     oportunidades.configurar(app)
     tarefas.configurar(app)
+    paginas_erro.configurar(app)
     app.middleware("http")(security_middleware)
     # Fora do BaseHTTPMiddleware: cliente que desiste no meio do envio não vira erro 500.
     app.add_middleware(LimiteCorpo)

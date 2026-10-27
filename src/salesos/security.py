@@ -10,7 +10,8 @@ import secrets
 from collections.abc import Awaitable, Callable
 
 from fastapi import HTTPException, Request, Response
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
+from starlette.datastructures import Headers
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 CSRF_COOKIE = "salesos_csrf"
@@ -121,10 +122,27 @@ class LimiteCorpo:
         await self.app(scope, reenviar, send)
 
 
+def quer_html(accept: str) -> bool:
+    """O navegador pede HTML; APIs e scripts não (recebem JSON ou texto, como antes)."""
+    return "text/html" in accept
+
+
+MUITO_GRANDE = "Envio grande demais. Reduza o texto e tente de novo."
+# Página mínima e fixa: o 413 nasce antes da aplicação (sem templates) e não repete o envio.
+PAGINA_MUITO_GRANDE = f"""<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Envio grande demais · SalesOS</title><link rel="stylesheet" href="/static/app.css"></head>
+<body><main id="conteudo" class="page"><h1 class="titulo">Envio grande demais</h1>
+<p class="lead">{MUITO_GRANDE}</p><p><a class="botao" href="/clientes">Voltar para clientes</a></p>
+</main></body></html>"""
+
+
 async def _muito_grande(scope: Scope, receive: Receive, send: Send) -> None:
-    resposta = PlainTextResponse(
-        "Envio grande demais. Reduza o texto e tente de novo.",
-        status_code=413,
-        headers=SECURITY_HEADERS,
-    )
+    accept = Headers(scope=scope).get("accept", "")
+    resposta: Response
+    if quer_html(accept):
+        resposta = HTMLResponse(PAGINA_MUITO_GRANDE, status_code=413, headers=SECURITY_HEADERS)
+    else:
+        resposta = PlainTextResponse(MUITO_GRANDE, status_code=413, headers=SECURITY_HEADERS)
     await resposta(scope, receive, send)

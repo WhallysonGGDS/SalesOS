@@ -146,15 +146,22 @@ async def atualizar(request: Request, session: SessionDep, cliente_id: IdDep) ->
 
 
 def _detalhe(
-    request: Request, session: Session, cliente_id: int, status: int = 200, **extra: Any
+    request: Request,
+    session: Session,
+    cliente_id: int,
+    status: int = 200,
+    linha_pagina: int = 1,
+    **extra: Any,
 ) -> Response:
     cliente = service.obter_cliente(session, cliente_id)
     contatos = service.listar_contatos(session, cliente_id)
+    linha = service.listar_interacoes(session, cliente_id, pagina=linha_pagina)
     contexto = {
         "cliente": cliente,
         "contatos": contatos,
         "nomes_contatos": {c.id: c.nome for c in contatos},
-        "linha": service.listar_interacoes(session, cliente_id),
+        "linha": linha.itens,
+        "linha_pagina": linha,
         "oportunidades": oportunidades.oportunidades_do_cliente(session, cliente_id),
         "oportunidades_max": oportunidades.DO_CLIENTE_MAX,
         "tarefas": tarefas.tarefas_do_cliente(session, cliente_id),
@@ -170,8 +177,13 @@ def _detalhe(
 
 
 @router.get("/clientes/{cliente_id}", response_class=HTMLResponse)
-def detalhe(request: Request, session: SessionDep, cliente_id: IdDep) -> Response:
-    return _detalhe(request, session, cliente_id)
+def detalhe(
+    request: Request,
+    session: SessionDep,
+    cliente_id: IdDep,
+    linha_pagina: Annotated[int, Query(ge=1, le=100_000)] = 1,
+) -> Response:
+    return _detalhe(request, session, cliente_id, linha_pagina=linha_pagina)
 
 
 @router.post("/clientes/{cliente_id}/arquivar")

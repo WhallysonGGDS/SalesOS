@@ -158,8 +158,8 @@ def test_timeline_is_newest_first_and_limited(session: Session) -> None:
             cliente.id,
             _interacao(f"dia {dia}", ocorrida_em=datetime(2026, 9, dia, tzinfo=UTC)),
         )
-    linha = service.listar_interacoes(session, cliente.id, limite=3)
-    assert [i.resumo for i in linha] == ["Cliente criado", "dia 3", "dia 2"]
+    linha = service.listar_interacoes(session, cliente.id, por_pagina=3)
+    assert [i.resumo for i in linha.itens] == ["Cliente criado", "dia 3", "dia 2"]
 
 
 def test_interactions_have_no_edit_or_delete_operation() -> None:

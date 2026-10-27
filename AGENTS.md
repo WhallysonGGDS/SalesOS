@@ -10,7 +10,7 @@ CRM comercial próprio da WE TECH. Primeira versão: local, um único usuário, 
 - **Pendente:**
   - **bloqueiam dados reais:** validação no Windows (checklist em `docs/setup.md`); B1 implementado e testado **só no Linux** (`restore --migrar`, ADR 0005); falta confirmá-lo no Windows (item 17 da checklist B); P1: política aprovada (12 meses após a anonimização) e expurgo manual `salesos expurgar` implementado e testado **só no Linux** (ADR 0008); falta o item 24 da checklist B no Windows;
   - CPF, CNPJ e telefone (sem fonte oficial aprovada);
-  - propostas F (paginação da linha do tempo) e G (páginas HTML para erros 403/413/422);
+  - propostas F (paginação da linha do tempo) e G (páginas HTML para 403/413/422 no navegador, APIs sem mudança): feitas e verificadas só no Linux (estabilização E6);
   - atualização do `certifi` no `uv.lock` (aviso do pip-audit, só desenvolvimento; exige autorização);
   - trava para `alembic upgrade` e para servidor iniciado fora do `salesos` (estabilização E2): resolvida e verificada só no Linux; falta o item 22 da checklist B no Windows;
   - resolvidos e verificados só no Linux na estabilização: ids enormes em `/clientes` e `/contatos` (E1, 422 em vez de 500); checagem de estrutura do backup com chaves estrangeiras, colunas dos índices e SQL completo, e dados conferidos (CHECK e chave estrangeira) na cópia privada antes da restauração (E3);

@@ -38,8 +38,8 @@ class Bloqueado(Exception):
 
 
 @dataclass(frozen=True)
-class Pagina:
-    itens: list[Cliente]
+class Pagina[T]:
+    itens: list[T]
     pagina: int
     tem_proxima: bool
 
@@ -129,7 +129,7 @@ def listar_clientes(
     arquivados: bool = False,
     pagina: int = 1,
     por_pagina: int = 20,
-) -> Pagina:
+) -> Pagina[Cliente]:
     pagina = max(1, pagina)
     por_pagina = min(max(1, por_pagina), POR_PAGINA_MAX)
     query = select(Cliente).where(
@@ -219,14 +219,21 @@ def registrar_interacao(session: Session, cliente_id: int, dados: InteracaoIn) -
     return interacao
 
 
-def listar_interacoes(session: Session, cliente_id: int, limite: int = 50) -> list[Interacao]:
+def listar_interacoes(
+    session: Session, cliente_id: int, pagina: int = 1, por_pagina: int = 50
+) -> Pagina[Interacao]:
+    """Linha do tempo, da mais recente para a mais antiga; nenhuma fica inacessível (F)."""
+    por_pagina = min(max(1, por_pagina), POR_PAGINA_MAX)
+    pagina = max(1, pagina)
     query = (
         select(Interacao)
         .where(Interacao.cliente_id == cliente_id)
         .order_by(Interacao.ocorrida_em.desc(), Interacao.id.desc())
-        .limit(min(max(1, limite), POR_PAGINA_MAX))
+        .offset((pagina - 1) * por_pagina)
+        .limit(por_pagina + 1)
     )
-    return list(session.scalars(query))
+    itens = list(session.scalars(query))
+    return Pagina(itens[:por_pagina], pagina, len(itens) > por_pagina)
 
 
 def anonimizar_cliente(session: Session, cliente_id: int) -> None:
