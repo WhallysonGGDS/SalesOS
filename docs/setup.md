@@ -78,9 +78,9 @@ Fase 01:
 
 ## Antes de usar dados reais (checklist B, Windows)
 
-Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/Users/<você>/AppData/Local/Temp/salesos-teste/salesos.db` e `SALESOS_BACKUP_DIR` numa pasta de teste, com dados fictícios. Ao terminar, remova essas linhas do `.env`.
+Sempre com um banco de teste: no `.env`, `SALESOS_DATABASE_URL=sqlite:///C:/Users/<você>/AppData/Local/Temp/salesos-teste/salesos.db` e `SALESOS_BACKUP_DIR` numa pasta de teste, com dados fictícios. Ao terminar, remova essas linhas do `.env`. Na validação E8, as mesmas variáveis vão no ambiente do PowerShell (`$env:`), que prevalece sobre o `.env` e não deixa nada no arquivo; o roteiro está em `docs/validacao-windows.md`.
 
-1. `uv run pytest`: resultado esperado, com o Windows no fuso de Brasília, `655 passed, 5 skipped, 1 warning`; em outro fuso, `644 passed, 16 skipped, 1 warning` (estimativas; nunca executado no Windows). Se 3 testes de horário de verão de 2018–2019 falharem, veja o item 23. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
+1. `uv run pytest`: resultado esperado, com o Windows no fuso de Brasília, `686 passed, 5 skipped, 1 warning`; em outro fuso, `675 passed, 16 skipped, 1 warning` (estimativas; nunca executado no Windows). Se 3 testes de horário de verão de 2018–2019 falharem, veja o item 23. O teste `test_windows_refuses_swap_while_other_process_holds_the_file` precisa **rodar e passar** (não pode aparecer como skipped).
 2. Com o servidor ligado, `uv run salesos backup` cria o backup e o `.db.json`.
 3. Com o servidor ligado, `uv run salesos restore <backup>` é recusado ("Outro processo do SalesOS…").
 4. Servidor desligado e o banco aberto no DB Browser: o restore é recusado ("Feche os programas…") sem alterar nada.
